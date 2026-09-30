@@ -1,0 +1,360 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{tubaf-title}[2024-04-18 TUBAF package for titles common to most classes (based on koma-script) by Max Weiner]
+
+\RequirePackage{tikz}
+\usetikzlibrary{calc}
+\RequirePackage{scrbase}
+
+\RequirePackage{tubaf-logo}
+\RequirePackage{tubaf-trapezoid}
+\RequirePackage{calc}
+
+\DeclareKeys[tubaf-title]{%
+    black.if=@tubaf@title@black,
+    black.usage=preamble,
+    trapezoid.if=@tubaf@title@trapezoid,
+    trapezoid.usage=preamble,
+}
+
+\SetKeys[tubaf-title]{
+    black=false,
+    trapezoid=true,
+}
+
+\ProcessKeyOptions[tubaf-title]
+
+\newcommand\tubaf@title@tubaflogo\tubaflogo
+\newcommand\tubaf@title@logo{\insertlogo{\logoheadsize}}
+\newcommand\tubaf@title@color{tubaf-primary}
+
+\AtBeginDocument{
+    \if@tubaf@title@black
+    \renewcommand\tubaf@title@tubaflogo\tubaflogoblack
+    \renewcommand\tubaf@title@logo{\insertlogo[black]{\logoheadsize}}
+    \renewcommand\tubaf@title@color{black}
+    \fi
+}
+
+\renewcommand{\and}{\unskip, }
+
+\newcommand{\tubaf@shorttitle}{}
+\renewcommand{\title}[2][]{
+    \renewcommand{\@title}{#2}
+    \IfArgIsEmpty{#1}{\renewcommand{\tubaf@shorttitle}{#2}}{\renewcommand{\tubaf@shorttitle}{#1}}
+}
+
+\newcommand{\tubaf@shortauthor}{}
+\renewcommand{\author}[2][]{
+    \renewcommand{\@author}{#2}
+    \IfArgIsEmpty{#1}{\renewcommand{\tubaf@shortauthor}{#2}}{\renewcommand{\tubaf@shortauthor}{#1}}
+}
+
+\addtokomafont{title}{\huge}
+
+\gdef\tubaf@title@titlefoot{}
+\newcommand{\titlefoot}[1]{\gdef\tubaf@title@titlefoot{#1}}
+
+\gdef\tubaf@title@moretitle{}
+\newcommand{\moretitle}[1]{\gdef\tubaf@title@moretitle{#1}}
+\newkomafont{moretitle}{}
+
+\newlength{\trapezoidfootsize}
+\setlength{\trapezoidfootsize}{4cm}
+
+\newlength{\titleskip}
+\setlength{\titleskip}{5mm}
+
+\newlength{\titlepagepos}
+\setlength{\titlepagepos}{0.33\paperheight}
+
+\publishers{TU Bergakademie Freiberg}
+
+\newlength{\logoheadsize}
+\setlength{\logoheadsize}{2cm}
+
+\newlength{\logoheadmargin}
+\setlength{\logoheadmargin}{1.5cm}
+
+\newlength{\titleheadpos}
+\setlength{\titleheadpos}{\dimexpr \logoheadsize + \logoheadmargin\relax}
+
+\newcommand{\tubaf@title@drawlogohead}{%
+    \begin{tikzpicture}[remember picture, overlay]
+        \useasboundingbox (current page.north west) rectangle(current page.south east);
+        \node[anchor=north west, inner sep=\logoheadmargin, text width={\dimexpr\paperwidth-2\logoheadmargin\relax}, align=right, name=logos, execute at begin node = \setlength{\lineskip}{0.2\logoheadsize}] at (current page.north west) {\adjustbox{height=\logoheadsize,valign=c}{\tubaf@title@tubaflogo} \hfill \adjustbox{valign=c}{\tubaf@title@logo}};
+    \end{tikzpicture}
+}
+
+% copied from koma-script and modified
+\renewcommand{\maketitle}[1][1]{
+    \if@titlepage
+    \begin{titlepage}
+        \setcounter{page}{#1}
+        \if@titlepageiscoverpage
+        \edef\titlepage@restore{
+            \noexpand\endgroup
+            \noexpand\global\noexpand\@colht\the\@colht
+            \noexpand\global\noexpand\@colroom\the\@colroom
+            \noexpand\global\vsize\the\vsize
+            \noexpand\global\noexpand\@titlepageiscoverpagefalse
+            \noexpand\let\noexpand\titlepage@restore\noexpand\relax
+        }%
+        \begingroup
+        \topmargin=\dimexpr \coverpagetopmargin-1in\relax
+        \oddsidemargin=\dimexpr \coverpageleftmargin-1in\relax
+        \evensidemargin=\dimexpr \coverpageleftmargin-1in\relax
+        \textwidth=\dimexpr
+        \paperwidth-\coverpageleftmargin-\coverpagerightmargin\relax
+        \textheight=\dimexpr
+        \paperheight-\coverpagetopmargin-\coverpagebottommargin\relax
+        \headheight=0pt
+        \headsep=0pt
+        \footskip=\baselineskip
+        \@colht=\textheight
+        \@colroom=\textheight
+        \vsize=\textheight
+        \columnwidth=\textwidth
+        \hsize=\columnwidth
+        \linewidth=\hsize
+        \else
+        \let\titlepage@restore\relax
+        \fi
+        \let\footnotesize\small
+        \let\footnoterule\relax
+        \let\footnote\thanks
+        \renewcommand*\thefootnote{\@fnsymbol\c@footnote}
+        \let\@oldmakefnmark\@makefnmark
+        \renewcommand*{\@makefnmark}{\rlap\@oldmakefnmark}
+        \ifx\@extratitle\@empty
+        \ifx\@frontispiece\@empty
+        \else
+        \if@twoside\mbox{}\next@tpage\fi
+        \noindent\@frontispiece\next@tdpage
+        \fi
+        \else
+        \noindent\@extratitle
+        \ifx\@frontispiece\@empty
+        \else
+        \next@tpage
+        \noindent\@frontispiece
+        \fi
+        \next@tdpage
+        \fi
+        \setparsizes{\z@}{\z@}{\z@\@plus 1fil}\par@updaterelative
+        \tubaf@title@titlepage
+        \if@twoside
+        \@tempswatrue
+        \expandafter\ifnum \@nameuse{scr@v@3.12}>\scr@compatibility\relax
+        \else
+        \ifx\@uppertitleback\@empty\ifx\@lowertitleback\@empty
+        \@tempswafalse
+        \fi\fi
+        \fi
+        \if@tempswa
+        \next@tpage
+        \begin{minipage}[t]{\textwidth}
+            \@uppertitleback
+        \end{minipage}\par
+        \vfill
+        \begin{minipage}[b]{\textwidth}
+            \@lowertitleback
+        \end{minipage}\par
+        \@thanks\global\let\@thanks\@empty
+        \fi
+        \else
+        \ifx\@uppertitleback\@empty\else
+        \ClassWarning{\KOMAClassName}{%
+            non empty \string\uppertitleback\space ignored
+            by \string\maketitle\MessageBreak
+            in `twoside=false' mode%
+        }%
+        \fi
+        \ifx\@lowertitleback\@empty\else
+        \ClassWarning{\KOMAClassName}{%
+            non empty \string\lowertitleback\space ignored
+            by \string\maketitle\MessageBreak
+            in `twoside=false' mode%
+        }%
+        \fi
+        \fi
+        \ifx\@dedication\@empty
+        \else
+        \next@tdpage\null\vfill
+        {\centering\usekomafont{dedication}{\@dedication \par}}%
+        \vskip \z@ \@plus3fill
+        \@thanks\global\let\@thanks\@empty
+        \cleardoubleemptypage
+        \fi
+        \ifx\titlepage@restore\relax\else\clearpage\titlepage@restore\fi
+    \end{titlepage}
+    \else
+    \par
+    \@tempcnta=#1
+    \relax\ifnum\@tempcnta=1\else
+    \ClassWarning{\KOMAClassName}{%
+        Optional argument of \string\maketitle\space ignored\MessageBreak
+        in `titlepage=false' mode%
+    }%
+    \fi
+    \ifx\@uppertitleback\@empty\else
+    \ClassWarning{\KOMAClassName}{%
+        non empty \string\uppertitleback\space ignored
+        by \string\maketitle\MessageBreak
+        in `titlepage=false' mode%
+    }%
+    \fi
+    \ifx\@lowertitleback\@empty\else
+    \ClassWarning{\KOMAClassName}{%
+        non empty \string\lowertitleback\space ignored
+        by \string\maketitle\MessageBreak
+        in `titlepage=false' mode%
+    }%
+    \fi
+    \begingroup
+    \let\titlepage@restore\relax
+    \renewcommand*\thefootnote{\@fnsymbol\c@footnote}%
+    \let\@oldmakefnmark\@makefnmark
+    \renewcommand*{\@makefnmark}{\rlap\@oldmakefnmark}%
+    \next@tdpage
+    \if@twocolumn
+    \ifnum \col@number=\@ne
+    \ifx\@extratitle\@empty
+    \ifx\@frontispiece\@empty\else\if@twoside\mbox{}\fi\fi
+    \else
+    \@makeextratitle
+    \fi
+    \ifx\@frontispiece\@empty
+    \ifx\@extratitle\@empty\else\next@tdpage\fi
+    \else
+    \next@tpage
+    \@makefrontispiece
+    \next@tdpage
+    \fi
+    \tubaf@title@title
+    \else
+    \ifx\@extratitle\@empty
+    \ifx\@frontispiece\@empty\else\if@twoside\mbox{}\fi\fi
+    \else
+    \twocolumn[\@makeextratitle]%
+    \fi
+    \ifx\@frontispiece\@empty
+    \ifx\@extratitle\@empty\else\next@tdpage\fi
+    \else
+    \next@tpage
+    \twocolumn[\@makefrontispiece]%
+    \next@tdpage
+    \fi
+    \twocolumn[\tubaf@title@title]%
+    \fi
+    \else
+    \ifx\@extratitle\@empty
+    \ifx\@frontispiece\@empty\else \mbox{}\fi
+    \else
+    \@makeextratitle
+    \fi
+    \ifx\@frontispiece\@empty
+    \ifx\@extratitle\@empty\else\next@tdpage\fi
+    \else
+    \next@tpage
+    \@makefrontispiece
+    \next@tdpage
+    \fi
+    \tubaf@title@title
+    \fi
+    \ifx\titlepagestyle\@empty\else\thispagestyle{\titlepagestyle}\fi
+    \@thanks\global\let\@thanks\@empty
+    \endgroup
+    \fi
+    \setcounter{footnote}{0}
+}
+
+\newcommand{\tubaf@title@titlepage@prehook}{}
+\newcommand{\tubaf@title@titlepage@posthook}{}
+
+\newcommand{\tubaf@title@titlepage}{%
+    \tubaf@title@titlepage@prehook
+    \tubaf@title@drawlogohead
+    \begin{tikzpicture}[remember picture, overlay]
+        \useasboundingbox (current page.south west) rectangle(current page.north east);
+        \if@tubaf@title@trapezoid
+        \tubaftrapezoidbottom*[fill=\tubaf@title@color]{\trapezoidfootsize}
+        \fi
+        \node[anchor=center, name=title, text width=\textwidth, font=\usekomafont{title}, align=flush center] at ($(current page.north)-(0,\titlepagepos)$) {\@title};
+        \ifx\@subject\empty\else
+        \node[anchor=south, name=subject, text width=\textwidth, font=\usekomafont{subject}, align=flush center] at ($(title.north)+(0,\titleskip)$) {\@subject};
+        \fi
+        \ifx\@subtitle\empty\else
+        \node[anchor=north, name=title, text width=\textwidth, font=\usekomafont{subtitle}, align=flush center] at ($(title.south)-(0,\titleskip)$) {\@subtitle};
+        \fi
+        \ifx\@author\empty\else
+        \node[anchor=north, name=title, text width=\textwidth, font=\usekomafont{author}, align=flush center] at ($(title.south)-(0,\titleskip)$) {\@author};
+        \fi
+        \ifx\@date\empty\else
+        \node[anchor=north, name=title, text width=\textwidth, font=\usekomafont{date}, align=flush center] at ($(title.south)-(0,\titleskip)$) {\@date};
+        \fi
+        \ifx\@publishers\empty\else
+        \node[anchor=north, name=title, text width=\textwidth, font=\usekomafont{publishers}, align=flush center] at ($(title.south)-(0,\titleskip)$) {\@publishers};
+        \fi
+        \ifx\tubaf@title@moretitle\empty\else
+        \node[anchor=north, name=title, text width=\textwidth, font=\usekomafont{moretitle}, align=flush center] at ($(title.south)-(0,\titleskip)$) {\tubaf@title@moretitle};
+        \fi
+        \ifx\@titlehead\empty\else
+        \node[anchor=north, name=titlehead, text width=\textwidth, font=\usekomafont{titlehead}, align=justify] at ($(current page.north)-(0,\logoheadmargin+\logoheadsize+1cm)$) {\@titlehead};
+        \fi
+        \ifx\@titlefoot\empty\else
+        \node[anchor=south, name=titlehead, text width=\textwidth, font=\usekomafont{titlehead}, align=justify] at ($(current page.south)+(0,\trapezoidfootsize+1cm)$) {\tubaf@title@titlefoot};
+        \fi
+    \end{tikzpicture}
+    \tubaf@title@titlepage@posthook
+}
+
+\newcommand{\tubaf@title@title@prehook}{}
+\newcommand{\tubaf@title@title@posthook}{}
+
+\newcommand{\tubaf@title@title}{
+    \tubaf@title@title@prehook
+    \global\@topnum=\z@
+    \setparsizes{\z@}{\z@}{\z@\@plus 1fil}\par@updaterelative
+    \tubaf@title@drawlogohead
+    \vskip \dimexpr \titleheadpos - 1in - \topmargin - \headsep - \headheight \relax
+    \ifx\@titlehead\@empty \else
+    \begin{minipage}[t]{\textwidth}
+        \usekomafont{titlehead}{\@titlehead\par}
+    \end{minipage}\par
+    \vskip 1em
+    \fi
+    \null
+    \begin{center}
+        \ifx\@subject\@empty \else
+        {\usekomafont{subject}{\@subject \par}}
+        \vskip 1em
+        \fi
+        {\usekomafont{title}{\huge \@title \par}}
+        {\ifx\@subtitle\@empty\else\vskip 0.5em\usekomafont{subtitle}\@subtitle\par\fi}
+        \vskip 1em
+        { \usekomafont{author} \@author\par }
+        \vskip 1em%
+        {\usekomafont{date}{\@date \par}}%
+        \ifx\@publishers\@empty \else
+        \vskip 0.5em
+        {\usekomafont{publishers}{\@publishers \par}}%
+        \fi
+        \ifx\tubaf@title@moretitle\@empty\else
+        \vskip 0.5em
+        {\usekomafont{moretitle}{\tubaf@title@moretitle \par}}%
+        \fi
+        \ifx\@dedication\@empty \else
+        \vskip 0.5em
+        {\usekomafont{dedication}{\@dedication \par}}%
+        \fi
+    \end{center}%
+    \par
+    \ifx\tubaf@title@titlefoot\@empty \else
+    \vskip 1em
+    \begin{minipage}[t]{\textwidth}
+        \usekomafont{titlehead}{\tubaf@title@titlefoot\par}%
+    \end{minipage}\par
+    \fi
+    \vskip 2em
+    \tubaf@title@title@posthook
+}

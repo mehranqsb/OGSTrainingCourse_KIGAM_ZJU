@@ -1,0 +1,41 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{tubaf-fonts}[2024-04-18 TUBAF package for font settings by Max Weiner and Marcus Herbig]
+
+\DeclareKeys{
+    sans.if = @tubaf@fonts@sansfont,
+    sans.usage = preamble,
+}
+\ProcessKeyOptions
+
+\RequirePackage{iftex}
+
+\ifLuaTeX
+	\RequirePackage{fontspec}
+	\RequirePackage[math-style=ISO]{unicode-math}
+	\setmainfont{TeX Gyre Termes}
+	\setsansfont{TeX Gyre Heros}
+	\setmonofont{TeX Gyre Cursor}
+	\setmathfont{TeX Gyre Termes Math}
+\else
+	\ifXeTeX
+		\RequirePackage{fontspec}
+		\RequirePackage[math-style=ISO]{unicode-math}
+		\setmainfont{TeX Gyre Termes}
+		\setsansfont{TeX Gyre Heros}
+		\setmonofont{TeX Gyre Cursor}
+		\setmathfont{TeX Gyre Termes Math}
+	\else
+		\RequirePackage[T1]{fontenc}
+		\RequirePackage{tgtermes}
+		\RequirePackage{tgheros}
+		\RequirePackage{tgcursor}
+	\fi
+\fi
+
+\AddToHook{begindocument/before}{
+    \if@tubaf@fonts@sansfont
+        \renewcommand{\familydefault}{\sfdefault}
+    \else
+        \renewcommand{\familydefault}{\rmdefault}
+    \fi
+}

@@ -1,0 +1,738 @@
+\documentclass[11pt,a4paper]{tubaf-report}
+\usepackage[sans]{tubaf-fonts}
+\SetKeys[tubaf-title]{black=false}
+
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage{graphicx}
+\usepackage{xurl}
+\usepackage[
+    colorlinks,
+    citecolor=black,
+    urlcolor=blue,
+    linkcolor=black,
+    bookmarksopen=true,
+    hypertexnames=true
+]{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+
+\definecolor{codebackground}{RGB}{245,247,250}
+\definecolor{codeframe}{RGB}{190,195,200}
+\definecolor{codecomment}{RGB}{0,110,70}
+
+\lstdefinestyle{terminal}{
+    backgroundcolor=\color{codebackground},
+    basicstyle=\ttfamily\small,
+    frame=single,
+    rulecolor=\color{codeframe},
+    breaklines=true,
+    breakatwhitespace=false,
+    columns=fullflexible,
+    keepspaces=true,
+    showstringspaces=false,
+    upquote=true,
+    xleftmargin=0.5em,
+    framexleftmargin=0.5em
+}
+
+\begin{document}
+
+\title[OpenGeoSys Installation Manual]{OpenGeoSys Training Course}
+\subtitle{Numerical Modelling of Coupled Thermo-Hydro-Mechanical Processes in Geological Media}
+\author[Mehran Ghasabeh]{Mehran Ghasabeh}
+\date{October 2026}
+\subject{Installation and Course Environment Manual}
+\publishers{Institute of Geotechnics, TU Bergakademie Freiberg}
+\moretitle{Course contact: \href{mailto:mehran.ghasabeh@ifgt.tu-freiberg.de}{mehran.ghasabeh@ifgt.tu-freiberg.de}}
+\titlefoot{Joint OpenGeoSys Training Course -- UFZ, KIGAM, Zhejiang University, and TUBAF}
+\setlength{\logoheadsize}{2.5cm}
+\makeatletter
+\renewcommand{\tubaf@title@logo}{\insertlogo{5.5cm}}
+\makeatother
+\logo{\includegraphics{UFZ_KIGAM_ZJU}}
+
+\maketitle
+
+\tableofcontents
+\clearpage
+
+\chapter{Course Overview}
+
+\noindent
+In geosciences and related engineering fields, computational geomechanics plays a critical role in understanding complex geological processes and addressing a wide range of geotechnical and geoscientific applications. These processes often involve multiphysical coupling across different spatial and temporal scales, requiring robust numerical frameworks capable of addressing inherent nonlinearities and complex material behaviour. Accurate numerical treatment of these coupled processes is therefore essential for stable, efficient, and reliable simulations of geomechanical systems.
+
+
+The course introduces the fundamental concepts and practical application of numerical methods for solving geomechanical problems using OpenGeoSys, an open-source finite element software platform for the simulation of coupled thermo-hydro-mechanical-chemical (THMC) processes in geosciences and related engineering fields.
+
+
+\noindent
+The course will cover:
+\begin{itemize}
+    \item Introduction to numerical modelling in geomechanics,
+    \item Fundamentals of the finite element method for geomechanical problems,
+    \item Introduction to the OpenGeoSys framework and simulation workflow,
+    \item Model setup: geometry, mesh, material properties, and initial/boundary conditions,
+    \item Constitutive models for geomechanical simulations,
+    \item Numerical simulation of deformation and stress in geomaterials,
+    \item Coupled hydro-mechanical and thermo-hydro-mechanical processes,
+    \item Practical examples and hands-on simulations using OpenGeoSys,
+    \item Post-processing and interpretation of numerical results.
+\end{itemize}
+
+The course combines theoretical explanations with practical exercises, enabling participants to develop and run numerical models using OpenGeoSys and to gain practical experience in the simulation of geomechanical and coupled THMC processes.
+
+
+The course is intended for researchers, engineers, graduate students, and professionals working in geotechnical engineering, geomechanics, geological engineering, computational geosciences, and related fields.
+
+
+\chapter{OpenGeoSys Installation and Requirements on Ubuntu}
+\label{chap:ubuntu-installation}
+
+These instructions use Python~3.13 on 64-bit Ubuntu~24.04. It is installed
+alongside the unchanged system Python. Both online and offline procedures create
+\texttt{.venv\_ogs} and install OGS~6.5.9 and OGSTools~0.8.2.
+\href{https://releases.ubuntu.com/}{Ubuntu~26.04} instead defaults to
+Python~3.14 and requires \texttt{cp314} wheels. See the official
+\href{https://ogstools.opengeosys.org/stable/user-guide/index.html}{OGSTools User Guide}
+for further workflow information.
+
+\section{Online installation on Ubuntu}
+
+Check the operating system and architecture:
+
+\begin{lstlisting}[style=terminal]
+lsb_release -ds
+uname -m
+\end{lstlisting}
+
+The architecture must be \texttt{x86\_64}. Ubuntu~24.04 provides Python~3.12
+as its system Python, so Python~3.13 is installed in parallel from the
+\href{https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa}{deadsnakes PPA}.
+Do not replace or remove Ubuntu's system Python. Install the repository tools,
+add the PPA, and install Python~3.13 with its virtual-environment module:
+
+\begin{lstlisting}[style=terminal]
+sudo apt update
+sudo apt install software-properties-common
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt update
+sudo apt install python3.13 python3.13-venv
+\end{lstlisting}
+
+Create the course directory and environment, then install the pinned packages:
+
+\begin{lstlisting}[style=terminal]
+mkdir -p /path/to/OGS_Course
+cd /path/to/OGS_Course
+python3.13 -m venv .venv_ogs
+source .venv_ogs/bin/activate
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install \
+  "ogs==6.5.9" "ogstools[all]==0.8.2" \
+  "notebook" "jupyterlab"
+python -c "from importlib.metadata import version; print('OGS:', version('ogs')); print('OGSTools:', version('ogstools'))"
+\end{lstlisting}
+
+The final command prints the installed OGS and OGSTools versions.
+
+\section{Preparing the complete Ubuntu offline bundle}
+
+Use an internet-connected Ubuntu computer with the \emph{same Ubuntu release
+and CPU architecture} as the offline computer. Debian packages are specific to
+the Ubuntu release; do not prepare them on Windows, macOS, or a different Ubuntu
+release.
+
+First download Python itself, pip, the virtual-environment module, and their
+required Ubuntu packages:
+
+\begin{lstlisting}[style=terminal]
+mkdir -p /path/to/OGS_offline_bundle/python_debs
+cd /path/to/OGS_offline_bundle
+sudo apt update
+sudo apt install software-properties-common apt-rdepends
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt update
+
+apt-rdepends python3.13 python3.13-venv \
+  | grep -v '^ ' \
+  | grep -v '^<' \
+  | sed 's/^debconf-2\.0$/debconf/' \
+  | sort -u > python_packages.txt
+
+cd python_debs
+xargs -a /path/to/OGS_offline_bundle/python_packages.txt apt download
+cd ..
+\end{lstlisting}
+
+The \texttt{sed} command replaces the virtual package name
+\texttt{debconf-2.0} with its downloadable provider, \texttt{debconf}. The
+\texttt{python\_debs} directory then contains Python~3.13 and its resolved
+Ubuntu and deadsnakes dependencies. Any other package without a download
+candidate indicates mismatched enabled repositories; resolve it before continuing.
+
+Next download every Python wheel required by the course. Running this command
+on matching Ubuntu avoids accidentally selecting wheels for another operating
+system or architecture:
+
+\begin{lstlisting}[style=terminal]
+python3.13 -m venv .ogs_venv
+source .ogs_venv/bin/activate
+python -m pip install --upgrade pip
+mkdir -p wheelhouse_ubuntu
+python -m pip download --only-binary=:all: \
+  -d wheelhouse_ubuntu \
+  "ogs==6.5.9" "ogstools[all]==0.8.2" \
+  "notebook" "jupyterlab"
+deactivate
+\end{lstlisting}
+
+The download must complete without errors. Keep all downloaded wheel files;
+removing an apparently unimportant dependency can make the offline installation
+fail. Copy the course files into the bundle so that it has this layout:
+
+\begin{lstlisting}[style=terminal]
+OGS_offline_bundle/
+|-- python_debs/
+|   `-- Python and dependency .deb files
+|-- wheelhouse_ubuntu/
+|   `-- OGS, OGSTools, Jupyter, and dependency wheels
+`-- OGS_Course/
+    `-- course files
+\end{lstlisting}
+
+\section{Offline installation on Ubuntu}
+
+Copy the complete bundle to the offline Ubuntu computer. Install the local
+Python packages without contacting an online repository:
+
+\begin{lstlisting}[style=terminal]
+cd /path/to/OGS_offline_bundle/python_debs
+sudo dpkg -i ./*.deb
+sudo dpkg --configure -a
+python3.13 --version
+python3.13 -m venv --help
+\end{lstlisting}
+
+If \texttt{dpkg} reports a missing dependency, the bundle is incomplete. Return
+to the matching online Ubuntu computer and download the named \texttt{.deb}; do
+not replace it with a package from another Ubuntu release.
+
+Create the environment and install only from the transferred wheelhouse:
+
+\begin{lstlisting}[style=terminal]
+cd /path/to/OGS_offline_bundle/OGS_Course
+python3.13 -m venv .venv_ogs
+source .venv_ogs/bin/activate
+python -m pip install --no-index \
+  --find-links /path/to/OGS_offline_bundle/wheelhouse_ubuntu \
+  "ogs==6.5.9" "ogstools[all]==0.8.2" \
+  "notebook" "jupyterlab"
+python -c "from importlib.metadata import version; print('OGS:', version('ogs')); print('OGSTools:', version('ogstools'))"
+\end{lstlisting}
+
+The final command prints the installed OGS and OGSTools versions.
+
+\chapter{OpenGeoSys Installation and Requirements on macOS}
+
+The supplied macOS installer provides the same online and offline modes as the
+Windows batch file. Because macOS does not execute Windows batch files, the Mac
+equivalent is the executable shell script
+\texttt{install\_ogstools\_macos.command}. It creates \texttt{.venv\_ogs}
+beside the script and installs OGS~6.5.9, OGSTools~0.8.2, Jupyter Notebook, and
+JupyterLab without modifying the system Python environment.
+
+\section{Supported Mac configuration}
+
+The binary wheel published for \texttt{ogs==6.5.9} and CPython~3.13 has the
+platform tag \texttt{macosx\_26\_0\_arm64}. Therefore, this pinned course
+installation requires:
+
+\begin{itemize}
+    \item an Apple Silicon Mac (M-series processor, reported as
+          \texttt{arm64});
+    \item macOS~26 or newer; and
+    \item native ARM64 or universal2 Python~3.13.
+\end{itemize}
+
+There is no OGS~6.5.9 Intel macOS wheel. Intel Macs and Apple Silicon Macs
+running an older macOS release cannot use this wheelhouse. For those computers,
+use the course environment on Ubuntu or Windows, or use a separately validated
+OGS version/build rather than silently changing the pinned course version.
+
+Check the Mac before installation:
+
+\begin{lstlisting}[style=terminal]
+sw_vers -productVersion
+uname -m
+python3.13 --version
+python3.13 -c "import platform; print(platform.machine())"
+\end{lstlisting}
+
+Both architecture commands must report \texttt{arm64}.
+
+\section{Online installation on macOS}
+
+An internet connection is required for this workflow. Download Python~3.13 from
+\url{https://www.python.org/downloads/macos/}. Choose the signed macOS 64-bit
+universal2 installer, run the \texttt{.pkg} file, and reopen Terminal. Verify it
+with:
+
+\begin{lstlisting}[style=terminal]
+python3.13 --version
+python3.13 -m pip --version
+\end{lstlisting}
+
+The universal2 installer supplies a native ARM64 Python when it is launched from
+a native Terminal on Apple Silicon.
+
+\subsection{Run the online macOS installer}
+
+Open Terminal, change to the course directory, make the script executable, and
+run it in online mode:
+
+\begin{lstlisting}[style=terminal]
+cd /path/to/OGS_Course_2026
+chmod +x install_ogstools_macos.command
+./install_ogstools_macos.command online
+./.venv_ogs/bin/python -c "from importlib.metadata import version; print('OGS:', version('ogs')); print('OGSTools:', version('ogstools'))"
+\end{lstlisting}
+
+A \texttt{.command} file is an executable macOS shell script. Run
+\texttt{chmod +x} only once; thereafter, double-clicking it in Finder or running
+it without an argument selects online mode. Use the \texttt{offline} argument
+shown below for offline mode. The script locates its own folder, keeps the
+environment and wheelhouse beside itself, and verifies OGS, OGSTools, and Jupyter.
+
+Activate the environment in a later Terminal session with:
+
+\begin{lstlisting}[style=terminal]
+cd /path/to/OGS_Course_2026
+source .venv_ogs/bin/activate
+\end{lstlisting}
+
+\section{Offline installation on macOS}
+
+First prepare the complete offline bundle as described in
+Chapter~\ref{chap:macos-wheelhouse}. It must contain both the Python installer
+itself and every Python wheel. Copy the bundle to the offline Mac with this
+layout:
+
+\begin{lstlisting}[style=terminal]
+OGS_Course_2026/
+|-- python-3.13.x-macos11.pkg
+|-- install_ogstools_macos.command
+`-- wheelhouse_macos_arm64/
+    |-- ogs-6.5.9-...-macosx_26_0_arm64.whl
+    |-- ogstools-0.8.2-...whl
+    `-- all dependency wheel files
+\end{lstlisting}
+
+On the offline Mac, first double-click
+\path{python-3.13.x-macos11.pkg} and complete the installation. Reopen Terminal
+and verify Python before running the course installer:
+
+\begin{lstlisting}[style=terminal]
+python3.13 --version
+python3.13 -m pip --version
+\end{lstlisting}
+
+Then open Terminal in the transferred directory and run:
+
+\begin{lstlisting}[style=terminal]
+chmod +x install_ogstools_macos.command
+./install_ogstools_macos.command offline
+./.venv_ogs/bin/python -c "from importlib.metadata import version; print('OGS:', version('ogs')); print('OGSTools:', version('ogstools'))"
+\end{lstlisting}
+
+Offline mode uses \texttt{--no-index} and
+\texttt{--find-links wheelhouse\_macos\_arm64}; pip therefore does not contact
+an online package index. The installation stops if the wheelhouse is missing or
+incomplete.
+
+\section{Using Jupyter on macOS}
+
+Activate the environment and start either interface:
+
+\begin{lstlisting}[style=terminal]
+source .venv_ogs/bin/activate
+jupyter notebook
+# or
+jupyter lab
+\end{lstlisting}
+
+To launch Notebook without activating the environment, use:
+
+\begin{lstlisting}[style=terminal]
+./.venv_ogs/bin/jupyter notebook
+\end{lstlisting}
+
+In VS Code, run \emph{Python: Select Interpreter} and choose
+\path{OGS_Course_2026/.venv_ogs/bin/python}. Select the same interpreter as the
+kernel when opening a Jupyter notebook.
+
+\chapter{Preparing the Complete macOS Offline Bundle on Ubuntu}
+\label{chap:macos-wheelhouse}
+
+The complete bundle has two independent parts: the signed Python~3.13 macOS
+installer and the Python wheelhouse. An Ubuntu computer can download macOS
+wheels without installing them. pip must be told the target operating system,
+CPU architecture, Python implementation, Python version, and ABI; otherwise it
+downloads Linux wheels for the Ubuntu host.
+
+\section{Download the Python installer itself}
+
+On any internet-connected computer, open
+\url{https://www.python.org/downloads/macos/} and download the signed Python~3.13
+64-bit universal2 installer. The filename has the form
+\path{python-3.13.x-macos11.pkg}. Store this \texttt{.pkg} file beside
+\texttt{install\_ogstools\_macos.command}. The wheelhouse does not contain
+Python itself, so this installer is mandatory for an offline Mac.
+
+\section{Confirm the target tag on the Mac}
+
+When the target Mac has temporary internet access, install the small
+\texttt{packaging} utility and inspect its supported platform tags:
+
+\begin{lstlisting}[style=terminal]
+python3.13 -m pip install packaging
+python3.13 -c "from packaging.tags import platform_tags; print(next(platform_tags()))"
+\end{lstlisting}
+
+For the supported course configuration, the result must include a platform tag
+compatible with \path{macosx_26_0_arm64}.
+
+\section{Download the Apple Silicon wheels from Ubuntu}
+
+On the connected Ubuntu computer, update pip in a preparation environment and
+download the complete CPython~3.13 wheel set:
+
+\begin{lstlisting}[style=terminal]
+python3 -m venv .ogs_venv
+source .ogs_venv/bin/activate
+python3 -m pip install --upgrade pip
+
+mkdir -p wheelhouse_macos_arm64
+python3 -m pip download --only-binary=:all: \
+  --platform macosx_26_0_arm64 \
+  --python-version 3.13 \
+  --implementation cp --abi cp313 \
+  -d wheelhouse_macos_arm64 \
+  "ogs==6.5.9" "ogstools[all]==0.8.2" \
+  "notebook" "jupyterlab"
+\end{lstlisting}
+
+The options select wheels for Apple Silicon macOS~26+, CPython~3.13, and the
+\texttt{cp313} ABI. Platform-independent \texttt{py3-none-any} wheels are also
+accepted. Do not replace the macOS platform with \texttt{linux\_x86\_64} or
+copy Linux wheels into this directory.
+
+The command must finish successfully. The binary-only option rejects source
+archives. Consequently, a missing compatible wheel causes an error instead of
+producing a bundle that would attempt compilation on the offline Mac.
+
+\section{Verify and transfer the bundle}
+
+Check that no source distributions or Linux/Windows wheels were collected:
+
+\begin{lstlisting}[style=terminal]
+find wheelhouse_macos_arm64 -maxdepth 1 -type f ! -name "*.whl"
+find wheelhouse_macos_arm64 -maxdepth 1 -type f \
+  \( -name "*linux*" -o -name "*win*" \)
+ls wheelhouse_macos_arm64/ogs-6.5.9-*-macosx_26_0_arm64.whl
+\end{lstlisting}
+
+The first two commands should print nothing, and the last command should show
+the OGS~6.5.9 CPython~3.13 macOS ARM64 wheel. Transfer the wheelhouse, the
+macOS installer script, the course files, and the Python~3.13 universal2
+\texttt{.pkg} installer to the offline Mac.
+
+\chapter{OpenGeoSys Installation and Requirements on Windows}
+
+The supplied batch installer supports both online and offline installation on
+64-bit Windows. It creates an isolated Python environment beside the installer
+and installs the course-tested versions OGS~6.5.9 and OGSTools~0.8.2. The
+installer does not modify the system Python environment.
+
+\section{Online installation on Windows}
+
+Download and install the 64-bit Python~3.13 Windows installer from
+\url{https://www.python.org/downloads/windows/}. During installation, enable
+\emph{Add Python to PATH}, install the Python launcher, and ensure that
+\texttt{pip} is selected. Open PowerShell or Command Prompt and verify the
+installation:
+
+\begin{lstlisting}[style=terminal]
+py -3.13 --version
+py -3.13 -m pip --version
+\end{lstlisting}
+
+Keep \texttt{install\_ogstools\_windows.bat} in the installation directory. The
+script creates a virtual environment named \texttt{.venv\_ogs} in that directory.
+
+\subsection{Run the online batch installer}
+
+An internet connection is required for this mode. In PowerShell, change to the
+directory containing the batch file and run:
+
+\begin{lstlisting}[style=terminal]
+.\install_ogstools_windows.bat online
+.\.venv_ogs\Scripts\python.exe -c "from importlib.metadata import version; print('OGS:', version('ogs')); print('OGSTools:', version('ogstools'))"
+\end{lstlisting}
+
+A \texttt{.bat} file is a Windows command script. Run it in PowerShell or
+Command Prompt with the \texttt{online} or \texttt{offline} argument;
+double-clicking it or omitting the argument selects online mode. The script
+locates its own folder, so the environment and wheelhouse remain beside it
+regardless of the current working directory.
+
+The script performs the following operations automatically:
+
+\begin{enumerate}
+    \item checks that Python~3.13 is available through the Windows launcher,
+    \item creates or reuses \texttt{.venv\_ogs},
+    \item installs the pinned OGS and OGSTools packages together with
+          Jupyter Notebook and JupyterLab,
+    \item checks the installed package versions and OGSTools configuration, and
+    \item verifies that \texttt{ogs.exe} and Jupyter Notebook can be executed.
+\end{enumerate}
+
+A successful run ends with \texttt{Installation succeeded}. To use the
+environment in a later PowerShell session, activate it with:
+
+\begin{lstlisting}[style=terminal]
+.\.venv_ogs\Scripts\Activate.ps1
+\end{lstlisting}
+
+For Command Prompt, use:
+
+\begin{lstlisting}[style=terminal]
+.\.venv_ogs\Scripts\activate.bat
+\end{lstlisting}
+
+If PowerShell prevents activation, allow locally created scripts for the current
+user and then reopen PowerShell:
+
+\begin{lstlisting}[style=terminal]
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+\end{lstlisting}
+
+\section{Using Jupyter Notebook on Windows}
+\label{subsec:windows-jupyter}
+
+The batch installer places Jupyter Notebook and JupyterLab in the course virtual
+environment, \texttt{.venv\_ogs}, together with OGS and OGSTools. This ensures that notebooks use
+the course-tested Python packages instead of packages from the system Python.
+
+Open PowerShell in the course directory and activate the environment:
+
+\begin{lstlisting}[style=terminal]
+Set-Location "C:\path\to\OGS_Course_2026"
+.\.venv_ogs\Scripts\Activate.ps1
+\end{lstlisting}
+
+Start the traditional Jupyter Notebook interface with:
+
+\begin{lstlisting}[style=terminal]
+jupyter notebook
+\end{lstlisting}
+
+Alternatively, start it without activating the environment:
+
+\begin{lstlisting}[style=terminal]
+.\.venv_ogs\Scripts\jupyter.exe notebook
+\end{lstlisting}
+
+Jupyter normally opens the Notebook dashboard in the default web browser. The
+folder from which it is started becomes the initial file browser location. Keep
+the PowerShell window open while Jupyter is running, and press
+\texttt{Ctrl+C} in that window to stop the server.
+
+To use the newer JupyterLab interface instead, run:
+
+\begin{lstlisting}[style=terminal]
+jupyter lab
+\end{lstlisting}
+
+To confirm that a notebook uses the correct environment, create a Python
+notebook and execute:
+
+\begin{lstlisting}[style=terminal]
+import sys
+import ogstools
+print(sys.executable)
+print(ogstools.__version__)
+\end{lstlisting}
+
+The reported interpreter path should contain
+\path{OGS_Course_2026\.venv_ogs\Scripts\python.exe}. These launch commands
+are identical after online and offline installation.
+
+
+\section{Installing and Configuring Visual Studio Code}
+\label{subsec:windows-vscode}
+
+Visual Studio Code (VS Code) is an optional graphical editor for the course.
+It is installed separately from the Python environment because it is a Windows
+application, not a Python package. The Python and Jupyter extensions connect
+VS Code to the existing \texttt{.venv\_ogs} environment.
+
+\subsection{Online installation}
+
+Download the 64-bit Windows \emph{User Installer} from
+\url{https://code.visualstudio.com/Download} and run it. The User Installer is
+recommended for most participants because it normally does not require
+administrator privileges. During setup, enable \emph{Add to PATH} if that
+option is presented. Close and reopen PowerShell after installation, then
+verify the command-line launcher:
+
+\begin{lstlisting}[style=terminal]
+code --version
+\end{lstlisting}
+
+Install the Microsoft Python and Jupyter extensions from PowerShell:
+
+\begin{lstlisting}[style=terminal]
+code --install-extension ms-python.python
+code --install-extension ms-toolsai.jupyter
+\end{lstlisting}
+
+Open the course directory in VS Code:
+
+\begin{lstlisting}[style=terminal]
+Set-Location "C:\path\to\OGS_Course_2026"
+code .
+\end{lstlisting}
+
+Press \texttt{Ctrl+Shift+P}, run \emph{Python: Select Interpreter}, and choose
+the interpreter at
+\path{OGS_Course_2026\.venv_ogs\Scripts\python.exe}. When opening an
+\texttt{.ipynb} file, use the kernel selector in the upper-right corner of the
+notebook editor and select the same \texttt{.venv\_ogs} environment. This makes
+the terminal, Python files, and notebooks use the OGS course packages.
+
+\subsection{Offline installation}
+
+On an internet-connected Windows computer, download the VS Code User Installer
+(or the ZIP archive when a portable installation is preferred). Also download
+the \texttt{.vsix} packages for the Microsoft \emph{Python} and \emph{Jupyter}
+extensions from their Visual Studio Marketplace pages. Copy the installer or
+ZIP archive and all downloaded \texttt{.vsix} files to the offline computer.
+
+Install VS Code, then install each extension from the VS Code Extensions view
+using \emph{Views and More Actions} (the \texttt{...} menu) followed by
+\emph{Install from VSIX}. If the \texttt{code} launcher is available, the same
+operation can be performed in PowerShell:
+
+\begin{lstlisting}[style=terminal]
+code --install-extension .\vscode_extensions\ms-python.python-<version>.vsix
+code --install-extension .\vscode_extensions\ms-toolsai.jupyter-<version>.vsix
+\end{lstlisting}
+
+If the Marketplace lists additional extension dependencies, download and
+transfer their \texttt{.vsix} files as well. Finally, open the course folder and
+select \path{.venv_ogs\Scripts\python.exe} as described above. The existing
+offline Python installation and \texttt{wheelhouse\_windows} are unchanged;
+VS Code only provides the editor and notebook interface.
+
+
+\chapter{Preparing the Complete Windows Offline Bundle}
+\label{chap:windows-offline-bundle}
+
+Prepare the bundle on a computer with internet access. It must contain both the
+Python installer and every required Python wheel.
+
+First download the 64-bit Python~3.13 Windows installer from
+\url{https://www.python.org/downloads/windows/}. Keep the downloaded
+\path{python-3.13.x-amd64.exe} file; do not download the ARM64 or embeddable
+package. The following commands can then be run on an online Ubuntu computer to
+download binary wheels for 64-bit CPython~3.13 without installing them there:
+
+\begin{lstlisting}[style=terminal]
+mkdir -p wheelhouse_windows
+python3 -m pip download --only-binary=:all: \
+  --platform win_amd64 --python-version 3.13 \
+  --implementation cp --abi cp313 \
+  -d wheelhouse_windows \
+  "ogs==6.5.9" "ogstools[all]==0.8.2" \
+  "notebook" "jupyterlab"
+\end{lstlisting}
+
+The options have the following meanings:
+
+\begin{itemize}
+    \item \texttt{--only-binary=:all:} accepts wheels only and rejects source
+          distributions that would require compilation;
+    \item \texttt{--platform win\_amd64} selects 64-bit Windows packages;
+    \item \texttt{--python-version 3.13} selects Python~3.13;
+    \item \texttt{--implementation cp} selects CPython;
+    \item \texttt{--abi cp313} selects the CPython~3.13 ABI; and
+    \item \texttt{-d wheelhouse\_windows} stores the downloaded packages in the
+          directory expected by the batch installer.
+\end{itemize}
+
+The download must finish successfully. If pip reports that no compatible binary
+distribution exists, do not proceed with an incomplete wheelhouse. Prepare the
+bundle with a recent pip version and keep every downloaded \texttt{.whl} file.
+
+Copy the installer and the complete wheel directory to the offline Windows
+computer. The required layout is:
+
+\begin{lstlisting}[style=terminal]
+OGS_Course_2026\
+|-- python-3.13.x-amd64.exe
+|-- install_ogstools_windows.bat
+`-- wheelhouse_windows\
+    |-- ogs-6.5.9-...whl
+    |-- ogstools-0.8.2-...whl
+    `-- all dependency wheel files
+\end{lstlisting}
+
+\chapter{Offline Installation on Windows}
+
+Copy the complete bundle to the offline Windows computer. First double-click
+\path{python-3.13.x-amd64.exe}. Enable \emph{Add Python to PATH}, install the
+Python launcher, and keep \texttt{pip} selected. No internet connection is
+required by the Python installer. Verify it in PowerShell:
+
+\begin{lstlisting}[style=terminal]
+py -3.13 --version
+py -3.13 -m pip --version
+\end{lstlisting}
+
+Then open PowerShell or Command Prompt in the folder containing the batch file
+and run:
+
+\begin{lstlisting}[style=terminal]
+.\install_ogstools_windows.bat offline
+.\.venv_ogs\Scripts\python.exe -c "from importlib.metadata import version; print('OGS:', version('ogs')); print('OGSTools:', version('ogstools'))"
+\end{lstlisting}
+
+Offline mode uses:
+
+\begin{lstlisting}[style=terminal]
+pip install --no-index --find-links wheelhouse_windows ...
+\end{lstlisting}
+
+Consequently, pip does not contact an online package index. Installation fails
+if the wheel directory is missing or if any required dependency is absent. The
+same automatic package and executable checks used by online mode run after the
+offline installation.
+
+\section{Troubleshooting}
+
+\begin{itemize}
+    \item If \texttt{py -3.13} is not found, reinstall 64-bit Python~3.13 with
+          the Python launcher enabled.
+    \item If an earlier failed run left an unusable \texttt{.venv\_ogs}, remove only
+          that \texttt{.venv\_ogs} directory and run the installer again.
+    \item Do not mix wheels for Python~3.13, 32-bit Windows, or other operating
+          systems with the CPython~3.13 64-bit Windows wheelhouse.
+    \item Review the output immediately preceding the failure message. It normally
+          identifies the missing package or failed check.
+\end{itemize}
+
+\end{document}
+

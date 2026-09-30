@@ -1,0 +1,68 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{tubaf-marks}[2024-04-18 TUBAF package for page marks common to most classes (using scrlayer-scrpage) by Max Weiner]
+
+\RequirePackage{scrbase}
+
+\DeclareKeys[tubaf-marks]{%
+    footmark.store=\tubaf@marks@footmark,
+    footmark.usage=preamble,
+    author-long.if = @tubaf@marks@authorlong,
+    title-long.if = @tubaf@marks@titlelong,
+}
+
+\SetKeys[tubaf-marks]{
+    footmark=author-title,
+    author-long = false,
+    title-long = false,
+}
+
+\ProcessKeyOptions[tubaf-marks]
+
+\RequirePackage[automark,headsepline=0.5pt,footsepline=0.5pt,plainfootsepline]{scrlayer-scrpage}
+\pagestyle{headings}
+
+\cfoot*{}
+\ofoot*{\pagemark}
+\chead*{}
+\ihead{\headmark}
+\ohead{}
+
+% increase distance between footseptline an foottext
+\ModifyLayer[addvoffset=-.25em]{scrheadings.foot.above.line}
+
+\AtBeginDocument{
+    \if@tubaf@marks@titlelong
+    \newcommand\tubaf@marks@title{\@title}
+    \else
+    \newcommand\tubaf@marks@title{\tubaf@shorttitle}
+    \fi
+    \if@tubaf@marks@authorlong
+    \newcommand\tubaf@marks@author{\@author}
+    \else
+    \newcommand\tubaf@marks@author{\tubaf@shortauthor}
+    \fi
+
+    \Ifstr{\tubaf@marks@footmark}{author-subject}{%
+        \ifoot*{\tubaf@marks@author\space--\space\@subject}
+    }{%
+        \Ifstr{\tubaf@marks@footmark}{author-title}{%
+            \ifoot*{\tubaf@marks@author:\space\tubaf@marks@title}
+        }{%
+            \Ifstr{\tubaf@marks@footmark}{author}{%
+                \ifoot*{\tubaf@marks@author}
+            }{%
+                \Ifstr{\tubaf@marks@footmark}{subject-title}{%
+                    \ifoot*{\@subject\space\tubaf@marks@title}
+                }{%
+                    \Ifstr{\tubaf@marks@footmark}{none}{%
+                        \ifoot*{}
+                    }{%
+                        \PackageError{tubaf-marks}{Invalid value \tubaf@marks@footmark \space given for option 'footmark'}{Allowed values: author-subject, author-title, author, subject-title, none}
+                    }
+                }
+            }
+        }
+    }
+}
+
+\setkomafont{pageheadfoot}{}
