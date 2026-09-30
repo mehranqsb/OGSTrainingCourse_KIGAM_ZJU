@@ -1,5 +1,4 @@
 /.venv_ogs/
-/wheelhouse_ubuntu/
 /wheelhouse_windows/
 /python-*-amd64.exe
 /Docs/*.aux
