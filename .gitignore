@@ -1,0 +1,12 @@
+/.venv_ogs/
+/wheelhouse_ubuntu/
+/wheelhouse_windows/
+/python-*-amd64.exe
+/Docs/*.aux
+/Docs/*.fdb_latexmk
+/Docs/*.fls
+/Docs/*.loc
+/Docs/*.log
+/Docs/*.out
+/Docs/*.soc
+/Docs/*.toc
