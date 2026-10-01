@@ -40,7 +40,7 @@ _CASES = {
         "fracture_medium_id": "0",
         "abstols": "1e-2 1e-8 1e-8 1e-8 1e-8 1e-8 1e-8",
         "maximum_dt": "20",
-        "damping": "0.8",
+        "damping": "1.0",
         "damping_reduction": "8",
         "pressure_bcs": [("POINT5", "Dirichlet"), ("POINT4", "Neumann")],
         "jump_bcs": {"displacement_jump1": ["POINT5", "POINT4"]},
@@ -56,7 +56,7 @@ _CASES = {
         "fracture_medium_id": "0, 1",
         "abstols": "1e-2 1e-8 1e-8 1e-8 1e-8 1e-8 1e-8 1e-8 1e-8",
         "maximum_dt": "50",
-        "damping": "0.7",
+        "damping": "1.0",
         "damping_reduction": "8",
         "pressure_bcs": [
             ("POINT5", "Dirichlet"),
@@ -77,7 +77,7 @@ _CASES = {
         "geometrical_set": "single_fracture",
         "fracture_medium_id": "1",
         "maximum_dt": "20",
-        "damping": "0.8",
+        "damping": "1.0",
         "damping_reduction": "8",
         "pressure_bcs": [("Frac_in", "Neumann"), ("Frac_out", "Dirichlet")],
     },
@@ -89,7 +89,7 @@ _CASES = {
         "geometrical_set": "double_fracture",
         "fracture_medium_id": "1,2",
         "maximum_dt": "20",
-        "damping": "0.7",
+        "damping": "1.0",
         "damping_reduction": "6",
         "pressure_bcs": [
             ("Frac0_in", "Neumann"),
@@ -218,7 +218,7 @@ class ProjectGenerator:
 
         self._build_time_loop(
             prj,
-            abstols="1e-2 1e-10 1e-10",
+            abstols="1e0 1e-10 1e-10",
             variables=["pressure_interpolated", "displacement"],
         )
 
