@@ -398,7 +398,7 @@
             <type>Newton</type>
             <max_iter>50</max_iter>
             <linear_solver>general_linear_solver</linear_solver>
-            <damping>0.8</damping>
+            <damping>1.0</damping>
             <damping_reduction>8</damping_reduction>
         </nonlinear_solver>
     </nonlinear_solvers>

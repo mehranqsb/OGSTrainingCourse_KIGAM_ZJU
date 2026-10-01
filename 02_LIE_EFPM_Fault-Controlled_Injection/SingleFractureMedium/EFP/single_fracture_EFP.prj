@@ -152,7 +152,7 @@
                 <convergence_criterion>
                     <type>PerComponentDeltaX</type>
                     <norm_type>NORM2</norm_type>
-                    <abstols>1e-2 1e-10 1e-10</abstols>
+                    <abstols>1e0 1e-10 1e-10</abstols>
                 </convergence_criterion>
                 <time_discretization>
                     <type>BackwardEuler</type>
@@ -323,7 +323,7 @@
             <type>Newton</type>
             <max_iter>50</max_iter>
             <linear_solver>general_linear_solver</linear_solver>
-            <damping>0.8</damping>
+            <damping>1.0</damping>
             <damping_reduction>8</damping_reduction>
         </nonlinear_solver>
     </nonlinear_solvers>
