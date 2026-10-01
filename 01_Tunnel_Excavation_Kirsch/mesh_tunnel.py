@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 # %%
+import os
 from pathlib import Path
 
 import gmsh
@@ -231,11 +232,14 @@ class MeshGenerator:
                     "-i", vtu_file_name, "-o", vtu_file_name
                 )
 
+        # identifySubdomains treats -o as a filename prefix, not a directory.
+        # A trailing separator keeps the output inside out_dir instead of
+        # writing "<out_dir>arc.vtu" next to it.
         ot.cli().identifySubdomains(
             "-m",
             bulk_mesh_name,
             "-o",
-            self.out_dir,
+            f"{self.out_dir}{os.sep}",
             "-f",
             "-s 1e-6",
             "--",
