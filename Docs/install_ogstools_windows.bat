@@ -54,6 +54,9 @@ goto verify
 if errorlevel 1 goto fail
 
 :verify
+rem Register one shared kernel for all course notebooks.
+"%PY%" -m ipykernel install --user --name ogs-python --display-name "OGS Python"
+if errorlevel 1 goto fail
 "%PY%" -c "from importlib.metadata import version; print('OGS package:', version('ogs')); print('OGSTools:', version('ogstools'))"
 if errorlevel 1 goto fail
 "%PY%" -c "import ogstools as ot; assert ot.status(verbose=True)"
@@ -73,6 +76,7 @@ if errorlevel 1 goto fail
 
 echo.
 echo Installation succeeded. Environment: "%VENV%"
+echo Jupyter kernel: OGS Python
 echo Start Jupyter Notebook with: "%VENV%\Scripts\jupyter.exe" notebook
 pause
 exit /b 0

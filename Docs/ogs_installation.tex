@@ -87,6 +87,83 @@ The course combines theoretical explanations with practical exercises, enabling 
 
 The course is intended for researchers, engineers, graduate students, and professionals working in geotechnical engineering, geomechanics, geological engineering, computational geosciences, and related fields.
 
+\section{One shared Jupyter kernel on every operating system}
+
+All course notebooks use the same virtual environment and the same Jupyter
+kernel name on Ubuntu, macOS, and Windows. After OGS, OGSTools, and Jupyter have
+been installed in the activated \texttt{.venv\_ogs} environment, register it
+with:
+
+\begin{lstlisting}[style=terminal]
+python -m ipykernel install --user --name ogs-python --display-name "OGS Python"
+\end{lstlisting}
+
+Here, \texttt{ogs-python} is Jupyter's internal identifier and
+\emph{OGS Python} is the name shown in the kernel menu. The registration is
+stored in the current user's Jupyter configuration, not in the course folder.
+It is required once on each computer and user account. Repeating the command is
+safe and refreshes the existing entry. After opening any course notebook,
+select \emph{OGS Python} from its kernel menu. All three supplied installers
+run this command automatically.
+
+\section{Included ready-to-transfer offline bundle}
+
+This course directory includes complete offline payloads for each supported
+platform. They provide Python~3.13, OGS~6.5.9, OGSTools~0.8.2, Jupyter
+Notebook, and JupyterLab:
+
+\begin{itemize}
+  \item Windows x86-64: \path{python-3.13.15-amd64.exe},
+        \path{install_ogstools_windows.bat}, and \path{wheelhouse_windows/};
+  \item Apple Silicon macOS~26+: \path{python-3.13.15-macos11.pkg},
+        \path{install_ogstools_macos.command}, and \path{wheelhouse_macos_arm64/};
+  \item Ubuntu~24.04 x86-64: \path{install_ogstools_ubuntu.sh},
+        \path{python_debs/}, and \path{wheelhouse_ubuntu/}.
+\end{itemize}
+
+The wheelhouses are not interchangeable. Copy the whole course directory to
+the offline computer. Concise commands are provided in
+\path{OFFLINE_BUNDLE_README.md}. SHA-256 hashes for every payload are in
+\path{OFFLINE_SHA256SUMS.txt}. On Ubuntu or macOS, verify them with:
+
+\begin{lstlisting}[style=terminal]
+sha256sum -c OFFLINE_SHA256SUMS.txt
+\end{lstlisting}
+
+On Windows, use \texttt{Get-FileHash <file> -Algorithm SHA256} and compare
+the result with the corresponding manifest entry.
+
+\section{Optional offline Visual Studio Code bundle}
+
+The \path{vscode_offline/} directory contains Visual Studio Code~1.140.0
+for all three supported systems and the complete Microsoft Python and Jupyter
+extension packs. VS Code is optional; Jupyter works without it.
+
+\begin{itemize}
+  \item Windows: run \path{vscode_offline/windows/VSCodeUserSetup-x64-1.140.0.exe};
+  \item macOS: extract \path{vscode_offline/macos_arm64/VSCode-darwin-arm64-1.140.0.zip}
+        and move Visual Studio Code to Applications;
+  \item Ubuntu: run \texttt{sudo apt install}
+        \path{./vscode_offline/ubuntu/code_1.140.0-1790759618_amd64.deb}.
+\end{itemize}
+
+After installing VS Code, install every supplied extension. On Ubuntu or macOS:
+
+\begin{lstlisting}[style=terminal]
+for extension in vscode_offline/extensions/*.vsix; do
+  code --install-extension "$extension"
+done
+\end{lstlisting}
+
+On Windows PowerShell:
+
+\begin{lstlisting}[style=terminal]
+Get-ChildItem .\vscode_offline\extensions\*.vsix |
+  ForEach-Object { code --install-extension $_.FullName }
+\end{lstlisting}
+
+Open the course folder, select the \texttt{.venv\_ogs} interpreter, and
+select \emph{OGS Python} as the notebook kernel.
 
 \chapter{OpenGeoSys Installation and Requirements on Ubuntu}
 \label{chap:ubuntu-installation}
@@ -133,6 +210,7 @@ python -m pip install --upgrade pip setuptools wheel
 python -m pip install \
   "ogs==6.5.9" "ogstools[all]==0.8.2" \
   "notebook" "jupyterlab"
+python -m ipykernel install --user --name ogs-python --display-name "OGS Python"
 python -c "from importlib.metadata import version; print('OGS:', version('ogs')); print('OGSTools:', version('ogstools'))"
 \end{lstlisting}
 
@@ -205,6 +283,19 @@ OGS_offline_bundle/
 
 \section{Offline installation on Ubuntu}
 
+For the supplied ready-to-transfer bundle, run:
+
+\begin{lstlisting}[style=terminal]
+cd /path/to/OGS_Course_2026
+chmod +x install_ogstools_ubuntu.sh
+./install_ogstools_ubuntu.sh offline
+\end{lstlisting}
+
+The installer checks Ubuntu~24.04 x86-64, installs the bundled Python~3.13
+packages, creates \texttt{.venv\_ogs}, installs only from
+\path{wheelhouse_ubuntu/}, registers \emph{OGS Python}, and verifies OGS
+and Jupyter. The manual steps below describe the same process.
+
 Copy the complete bundle to the offline Ubuntu computer. Install the local
 Python packages without contacting an online repository:
 
@@ -230,10 +321,32 @@ python -m pip install --no-index \
   --find-links /path/to/OGS_offline_bundle/wheelhouse_ubuntu \
   "ogs==6.5.9" "ogstools[all]==0.8.2" \
   "notebook" "jupyterlab"
+python -m ipykernel install --user --name ogs-python --display-name "OGS Python"
 python -c "from importlib.metadata import version; print('OGS:', version('ogs')); print('OGSTools:', version('ogstools'))"
 \end{lstlisting}
 
 The final command prints the installed OGS and OGSTools versions.
+
+\section{Using Jupyter on Ubuntu}
+
+Activate the course environment, confirm the shared kernel registration, and
+start either Jupyter interface:
+
+\begin{lstlisting}[style=terminal]
+cd /path/to/OGS_Course
+source .venv_ogs/bin/activate
+python -m ipykernel install --user --name ogs-python --display-name "OGS Python"
+jupyter notebook
+# or
+jupyter lab
+\end{lstlisting}
+
+The installation commands already perform the registration, so the
+\texttt{ipykernel install} command normally needs to be run only once. Select
+\emph{OGS Python} from the kernel menu in every course notebook. To verify the
+active interpreter from a notebook, run \texttt{import sys} followed by
+\texttt{print(sys.executable)}; the path should contain
+\path{OGS_Course/.venv_ogs/bin/python}.
 
 \chapter{OpenGeoSys Installation and Requirements on macOS}
 
@@ -241,8 +354,9 @@ The supplied macOS installer provides the same online and offline modes as the
 Windows batch file. Because macOS does not execute Windows batch files, the Mac
 equivalent is the executable shell script
 \texttt{install\_ogstools\_macos.command}. It creates \texttt{.venv\_ogs}
-beside the script and installs OGS~6.5.9, OGSTools~0.8.2, Jupyter Notebook, and
-JupyterLab without modifying the system Python environment.
+beside the script, installs OGS~6.5.9, OGSTools~0.8.2, Jupyter Notebook and
+JupyterLab, and registers the shared \emph{OGS Python} kernel without modifying
+the system Python environment.
 
 \section{Supported Mac configuration}
 
@@ -322,7 +436,7 @@ layout:
 
 \begin{lstlisting}[style=terminal]
 OGS_Course_2026/
-|-- python-3.13.x-macos11.pkg
+|-- python-3.13.15-macos11.pkg
 |-- install_ogstools_macos.command
 `-- wheelhouse_macos_arm64/
     |-- ogs-6.5.9-...-macosx_26_0_arm64.whl
@@ -331,7 +445,7 @@ OGS_Course_2026/
 \end{lstlisting}
 
 On the offline Mac, first double-click
-\path{python-3.13.x-macos11.pkg} and complete the installation. Reopen Terminal
+\path{python-3.13.15-macos11.pkg} and complete the installation. Reopen Terminal
 and verify Python before running the course installer:
 
 \begin{lstlisting}[style=terminal]
@@ -358,6 +472,7 @@ Activate the environment and start either interface:
 
 \begin{lstlisting}[style=terminal]
 source .venv_ogs/bin/activate
+python -m ipykernel install --user --name ogs-python --display-name "OGS Python"
 jupyter notebook
 # or
 jupyter lab
@@ -369,8 +484,13 @@ To launch Notebook without activating the environment, use:
 ./.venv_ogs/bin/jupyter notebook
 \end{lstlisting}
 
+The installer runs the kernel-registration command automatically. It only
+needs to be run once per user account, but running it again safely refreshes the
+same \emph{OGS Python} entry. Select \emph{OGS Python} from the kernel menu in
+all course notebooks.
+
 In VS Code, run \emph{Python: Select Interpreter} and choose
-\path{OGS_Course_2026/.venv_ogs/bin/python}. Select the same interpreter as the
+\path{OGS_Course_2026/.venv_ogs/bin/python}. Select \emph{OGS Python} as the
 kernel when opening a Jupyter notebook.
 
 \chapter{Preparing the Complete macOS Offline Bundle on Ubuntu}
@@ -387,7 +507,7 @@ downloads Linux wheels for the Ubuntu host.
 On any internet-connected computer, open
 \url{https://www.python.org/downloads/macos/} and download the signed Python~3.13
 64-bit universal2 installer. The filename has the form
-\path{python-3.13.x-macos11.pkg}. Store this \texttt{.pkg} file beside
+\path{python-3.13.15-macos11.pkg}. Store this \texttt{.pkg} file beside
 \texttt{install\_ogstools\_macos.command}. The wheelhouse does not contain
 Python itself, so this installer is mandatory for an offline Mac.
 
@@ -495,6 +615,7 @@ The script performs the following operations automatically:
     \item creates or reuses \texttt{.venv\_ogs},
     \item installs the pinned OGS and OGSTools packages together with
           Jupyter Notebook and JupyterLab,
+    \item registers the shared \emph{OGS Python} kernel for all course notebooks,
     \item checks the installed package versions and OGSTools configuration, and
     \item verifies that \texttt{ogs.exe} and Jupyter Notebook can be executed.
 \end{enumerate}
@@ -531,7 +652,13 @@ Open PowerShell in the course directory and activate the environment:
 \begin{lstlisting}[style=terminal]
 Set-Location "C:\path\to\OGS_Course_2026"
 .\.venv_ogs\Scripts\Activate.ps1
+python -m ipykernel install --user --name ogs-python --display-name "OGS Python"
 \end{lstlisting}
+
+The installer runs the kernel-registration command automatically. It only
+needs to be run once per Windows user account, but running it again safely
+refreshes the same entry. Select \emph{OGS Python} from the kernel menu in all
+course notebooks.
 
 Start the traditional Jupyter Notebook interface with:
 
@@ -610,7 +737,7 @@ Press \texttt{Ctrl+Shift+P}, run \emph{Python: Select Interpreter}, and choose
 the interpreter at
 \path{OGS_Course_2026\.venv_ogs\Scripts\python.exe}. When opening an
 \texttt{.ipynb} file, use the kernel selector in the upper-right corner of the
-notebook editor and select the same \texttt{.venv\_ogs} environment. This makes
+notebook editor and select \emph{OGS Python}. This makes
 the terminal, Python files, and notebooks use the OGS course packages.
 
 \subsection{Offline installation}
@@ -633,9 +760,10 @@ code --install-extension .\vscode_extensions\ms-toolsai.jupyter-<version>.vsix
 
 If the Marketplace lists additional extension dependencies, download and
 transfer their \texttt{.vsix} files as well. Finally, open the course folder and
-select \path{.venv_ogs\Scripts\python.exe} as described above. The existing
-offline Python installation and \texttt{wheelhouse\_windows} are unchanged;
-VS Code only provides the editor and notebook interface.
+select \path{.venv_ogs\Scripts\python.exe} as described above and choose
+\emph{OGS Python} in each notebook's kernel selector. The existing offline
+Python installation and \texttt{wheelhouse\_windows} are unchanged; VS Code
+only provides the editor and notebook interface.
 
 
 \chapter{Preparing the Complete Windows Offline Bundle}
@@ -646,7 +774,7 @@ Python installer and every required Python wheel.
 
 First download the 64-bit Python~3.13 Windows installer from
 \url{https://www.python.org/downloads/windows/}. Keep the downloaded
-\path{python-3.13.x-amd64.exe} file; do not download the ARM64 or embeddable
+\path{python-3.13.15-amd64.exe} file; do not download the ARM64 or embeddable
 package. The following commands can then be run on an online Ubuntu computer to
 download binary wheels for 64-bit CPython~3.13 without installing them there:
 
@@ -682,7 +810,7 @@ computer. The required layout is:
 
 \begin{lstlisting}[style=terminal]
 OGS_Course_2026\
-|-- python-3.13.x-amd64.exe
+|-- python-3.13.15-amd64.exe
 |-- install_ogstools_windows.bat
 `-- wheelhouse_windows\
     |-- ogs-6.5.9-...whl
@@ -693,7 +821,7 @@ OGS_Course_2026\
 \chapter{Offline Installation on Windows}
 
 Copy the complete bundle to the offline Windows computer. First double-click
-\path{python-3.13.x-amd64.exe}. Enable \emph{Add Python to PATH}, install the
+\path{python-3.13.15-amd64.exe}. Enable \emph{Add Python to PATH}, install the
 Python launcher, and keep \texttt{pip} selected. No internet connection is
 required by the Python installer. Verify it in PowerShell:
 

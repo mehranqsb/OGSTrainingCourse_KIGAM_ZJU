@@ -60,6 +60,9 @@ else
         notebook jupyterlab
 fi
 
+# Register one shared kernel for all course notebooks.
+"$PY" -m ipykernel install --user --name ogs-python --display-name "OGS Python"
+
 "$PY" -c "from importlib.metadata import version; print('OGS package:', version('ogs')); print('OGSTools:', version('ogstools'))"
 "$PY" -c "import ogstools as ot; assert ot.status(verbose=True)"
 
@@ -71,4 +74,5 @@ fi
 trap - ERR
 printf '\nInstallation succeeded. Environment: %s\n' "$VENV"
 printf 'Activate it with: source "%s/bin/activate"\n' "$VENV"
+printf 'Jupyter kernel: OGS Python\n'
 printf 'Start Jupyter Notebook with: "%s/bin/jupyter" notebook\n' "$VENV"

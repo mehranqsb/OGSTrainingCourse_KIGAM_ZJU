@@ -21,12 +21,12 @@ Start with the [Installation and Course Environment Manual](Docs/ogs_installatio
 | [install_ogstools_macos.command](install_ogstools_macos.command) | Apple Silicon macOS online/offline installer. |
 | `python-3.13.15-amd64.exe` | Bundled Python installer for 64-bit x86 Windows. |
 | `python-3.13.15-macos11.pkg` | Bundled Python universal2 installer for macOS. |
-| `wheelhouse_windows/` | Python wheels for Windows x86-64 and CPython 3.13. |
-| `wheelhouse_macos_arm64/` | Python wheels for Apple Silicon and CPython 3.13. |
-| `wheelhouse_ubuntu/` | Python wheels for Linux x86-64 and CPython 3.13. |
+| `wheelhouse_windows/` | Python wheels for Windows x86-64 and CPython 3.13, plus a `SHA256SUMS` checksum list. |
+| `wheelhouse_macos_arm64/` | Python wheels for Apple Silicon and CPython 3.13, plus a `SHA256SUMS` checksum list. |
+| `wheelhouse_ubuntu/` | Python wheels for Linux x86-64 and CPython 3.13, plus a `SHA256SUMS` checksum list. |
 | [python_packages.txt](python_packages.txt) | Ubuntu/Debian system-package names collected for Python setup; **not a pip requirements file**. |
 
-Each wheelhouse currently contains 172 wheels. The `Docs/` folder also contains copies of both installer scripts. **Use the root-level scripts**: they locate the wheelhouse and create `.venv_ogs` beside themselves, while the supplied wheelhouses are at the repository root.
+The wheelhouses contain 172 (Ubuntu), 175 (macOS), and 174 (Windows) wheels. The counts differ because each wheelhouse also carries the dependencies that Jupyter needs only on that platform: `appnope`, `pyobjc-core`, and `pyobjc-framework-Cocoa` on macOS, and `colorama` and `pywinpty` on Windows. Every wheelhouse includes a `SHA256SUMS` file listing the checksum of each wheel. The `Docs/` folder also contains copies of both installer scripts. **Use the root-level scripts**: they locate the wheelhouse and create `.venv_ogs` beside themselves, while the supplied wheelhouses are at the repository root.
 
 ## Course environment
 
@@ -77,6 +77,15 @@ git lfs pull
 git lfs ls-files
 git lfs fsck
 ```
+
+Then verify the wheels of your platform against the bundled checksum list, for example:
+
+```bash
+cd wheelhouse_ubuntu   # or wheelhouse_macos_arm64, wheelhouse_windows
+sha256sum -c SHA256SUMS
+```
+
+On macOS use `shasum -a 256 -c SHA256SUMS`. On Windows PowerShell, individual files can be checked with `Get-FileHash <file> -Algorithm SHA256` and compared with the listed value. Every line should report `OK`; a mismatch or a missing file means the download is incomplete.
 
 The Ubuntu and Windows binary entries in `git lfs ls-files` should show `*`, indicating full files in the working directory, rather than `-`, indicating LFS pointers. `git lfs fsck` checks the local LFS objects for integrity.
 
@@ -223,6 +232,7 @@ The interpreter path should point into this repository's `.venv_ogs` directory.
 ## Offline bundles and troubleshooting
 
 - Keep the complete wheelhouse for your target platform beside the root installer. Offline mode uses `--no-index` and fails if a required compatible package is unavailable.
+- If offline installation reports `No matching distribution found`, check the wheelhouse against its `SHA256SUMS` file to find wheels that are missing or damaged.
 - Wheelhouses contain Python packages, not Python itself. The Windows and macOS Python installers are supplied separately; Ubuntu system packages must be prepared separately.
 - If Windows cannot find `py -3.13`, check that Python 3.13 and the Python launcher were installed, then reopen the terminal.
 - If the macOS installer rejects the machine, check the macOS version and ensure Terminal and Python run natively as `arm64`.

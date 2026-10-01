@@ -1,14 +1,13 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -Eeuo pipefail
 
-# OpenGeoSys course installer for Apple Silicon macOS 26+ and Python 3.13.
-# Double-click for online installation, or run:
-#   ./install_ogstools_macos.command offline
-# Offline mode expects wheelhouse_macos_arm64 beside this script.
+# OpenGeoSys course installer for Ubuntu 24.04 x86-64 and Python 3.13.
+# Usage: ./install_ogstools_ubuntu.sh [online|offline]
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 VENV="$SCRIPT_DIR/.venv_ogs"
-WHEELS="$SCRIPT_DIR/wheelhouse_macos_arm64"
+WHEELS="$SCRIPT_DIR/wheelhouse_ubuntu"
+DEBS="$SCRIPT_DIR/python_debs"
 OGS_VERSION="6.5.9"
 OGSTOOLS_VERSION="0.8.2"
 INSTALL_MODE="${1:-online}"
@@ -25,33 +24,37 @@ case "$INSTALL_MODE" in
     *) fail "Usage: $0 [online|offline]" ;;
 esac
 
-[[ "$(uname -s)" == "Darwin" ]] || fail "This installer must run on macOS."
-[[ "$(uname -m)" == "arm64" ]] || fail "OGS 6.5.9 has no Intel macOS wheel; an Apple Silicon Mac is required."
+[[ "$(uname -s)" == "Linux" ]] || fail "This installer must run on Linux."
+[[ "$(uname -m)" == "x86_64" ]] || fail "This bundle requires x86-64 Ubuntu."
+# shellcheck disable=SC1091
+source /etc/os-release
+[[ "${ID:-}" == "ubuntu" && "${VERSION_ID:-}" == "24.04" ]] || \
+    fail "This bundle requires Ubuntu 24.04."
 
-MACOS_MAJOR="$(sw_vers -productVersion | cut -d. -f1)"
-[[ "$MACOS_MAJOR" =~ ^[0-9]+$ ]] || fail "Could not determine the macOS version."
-(( MACOS_MAJOR >= 26 )) || fail "The OGS 6.5.9 wheel requires macOS 26 or newer."
-
-if command -v python3.13 >/dev/null 2>&1; then
-    PYTHON="$(command -v python3.13)"
+if [[ "$INSTALL_MODE" == "offline" ]]; then
+    compgen -G "$DEBS/*.deb" >/dev/null || fail "No Ubuntu Python packages found in $DEBS."
+    compgen -G "$WHEELS/*.whl" >/dev/null || fail "No Python wheels found in $WHEELS."
+    sudo dpkg -i "$DEBS"/*.deb
+    sudo dpkg --configure -a
 else
-    fail "Install the Python 3.13 universal2 package from python.org first."
+    if ! command -v python3.13 >/dev/null 2>&1; then
+        sudo apt-get update
+        sudo apt-get install -y software-properties-common
+        sudo add-apt-repository -y ppa:deadsnakes/ppa
+        sudo apt-get update
+        sudo apt-get install -y python3.13 python3.13-venv
+    fi
 fi
 
-"$PYTHON" --version
-[[ "$("$PYTHON" -c 'import platform; print(platform.machine())')" == "arm64" ]] || \
-    fail "Python is running as x86_64. Use native Terminal and an arm64/universal2 Python 3.13."
+command -v python3.13 >/dev/null 2>&1 || fail "python3.13 was not installed."
 
 if [[ ! -x "$VENV/bin/python" ]]; then
-    "$PYTHON" -m venv "$VENV"
+    python3.13 -m venv "$VENV"
 fi
-
 PY="$VENV/bin/python"
 
 if [[ "$INSTALL_MODE" == "offline" ]]; then
-    compgen -G "$WHEELS/*.whl" >/dev/null || \
-        fail "No wheel files found in $WHEELS."
-    "$PY" -m pip install --upgrade --no-index --find-links "$WHEELS" \
+    "$PY" -m pip install --no-index --find-links "$WHEELS" \
         "ogs==$OGS_VERSION" "ogstools[all]==$OGSTOOLS_VERSION" \
         notebook jupyterlab
 else
@@ -60,12 +63,9 @@ else
         notebook jupyterlab
 fi
 
-# Register one shared kernel for all course notebooks.
 "$PY" -m ipykernel install --user --name ogs-python --display-name "OGS Python"
-
 "$PY" -c "from importlib.metadata import version; print('OGS package:', version('ogs')); print('OGSTools:', version('ogstools'))"
 "$PY" -c "import ogstools as ot; assert ot.status(verbose=True)"
-
 [[ -x "$VENV/bin/ogs" ]] || fail "The ogs executable was not found in the environment."
 [[ -x "$VENV/bin/jupyter" ]] || fail "The jupyter executable was not found in the environment."
 "$VENV/bin/ogs" --version
