@@ -1,0 +1,37 @@
+info: This is OpenGeoSys-6 version 6.5.9. Log version: 2, Log level: info.
+info: OGS starts on 2026-09-28 16:22:53+0200 in serial mode / Python embedded mode.
+warning: OMP_NUM_THREADS is not set, falling back to: 24
+info: Eigen use 24 threads
+info: Reading project file DoubleFractureMedium/LIE/double_fracture_LIE.prj.
+info: readRasters ...
+info: readRasters done
+info: ConstantParameter: rho_fr
+info: ConstantParameter: mu
+info: ConstantParameter: rho_sr
+info: ConstantParameter: phi
+info: ConstantParameter: k
+info: ConstantParameter: S
+info: ConstantParameter: biot_m
+info: ConstantParameter: E
+info: ConstantParameter: nu
+info: ConstantParameter: b
+info: ConstantParameter: S_f
+info: ConstantParameter: biot_f
+info: ConstantParameter: Kn
+info: ConstantParameter: Ks
+info: ConstantParameter: p0
+info: CurveScaledParameter: q_in
+info: ConstantParameter: q_in_start
+info: ConstantParameter: area_parameter
+info: ConstantParameter: displacement0
+info: ConstantParameter: effective_stress0
+info: ConstantParameter: fracture_effective_stress0
+info: ConstantParameter: zero_u
+info: ConstantParameter: load
+info: No source terms for process variable 'pressure' found.
+info: No source terms for process variable 'displacement' found.
+info: No source terms for process variable 'displacement_jump1' found.
+info: No source terms for process variable 'displacement_jump2' found.
+critical: /project/ProcessLib/LIE/HydroMechanics/CreateHydroMechanicsProcess.cpp:123 createHydroMechanicsProcess() Currently only one displacement jump is supported
+error: Currently only one displacement jump is supported
+Could not construct OGSSimulation object

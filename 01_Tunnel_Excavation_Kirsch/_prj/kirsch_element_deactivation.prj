@@ -1,0 +1,194 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<OpenGeoSysProject>
+    <meshes>
+        <mesh>domain.vtu</mesh>
+        <mesh>left.vtu</mesh>
+        <mesh>right.vtu</mesh>
+        <mesh>top.vtu</mesh>
+        <mesh>bottom.vtu</mesh>
+        <mesh>arc.vtu</mesh>
+    </meshes>
+    <processes>
+        <process>
+            <name>SD</name>
+            <type>SMALL_DEFORMATION</type>
+            <integration_order>4</integration_order>
+            <specific_body_force>0 0</specific_body_force>
+            <constitutive_relation id="*">
+                <type>LinearElasticIsotropic</type>
+                <youngs_modulus>E</youngs_modulus>
+                <poissons_ratio>nu</poissons_ratio>
+            </constitutive_relation>
+            <process_variables>
+                <process_variable>displacement</process_variable>
+            </process_variables>
+            <secondary_variables>
+                <secondary_variable internal_name="epsilon" output_name="epsilon"/>
+                <secondary_variable internal_name="sigma" output_name="sigma"/>
+            </secondary_variables>
+            <initial_stress>sigma0</initial_stress>
+        </process>
+    </processes>
+    <media>
+        <medium id="*">
+            <phases>
+                <phase>
+                    <type>Solid</type>
+                    <properties>
+                        <property>
+                            <name>density</name>
+                            <type>Constant</type>
+                            <value>0.0</value>
+                        </property>
+                    </properties>
+                </phase>
+            </phases>
+        </medium>
+    </media>
+    <time_loop>
+        <processes>
+            <process ref="SD">
+                <nonlinear_solver>basic_newton</nonlinear_solver>
+                <convergence_criterion>
+                    <type>PerComponentDeltaX</type>
+                    <norm_type>NORM2</norm_type>
+                    <abstols>1e-9 1e-9</abstols>
+                    <reltols>1e-9 1e-9</reltols>
+                </convergence_criterion>
+                <time_discretization>
+                    <type>BackwardEuler</type>
+                </time_discretization>
+                <time_stepping>
+                    <type>IterationNumberBasedTimeStepping</type>
+                    <t_initial>0.0</t_initial>
+                    <t_end>345600.0</t_end>
+                    <initial_dt>10000</initial_dt>
+                    <minimum_dt>10</minimum_dt>
+                    <maximum_dt>17280</maximum_dt>
+                    <number_iterations>1 4 10 15 20 25 31</number_iterations>
+                    <multiplier>1.5 1.3 1.2 1.1 0.8 0.7 0.6</multiplier>
+                </time_stepping>
+            </process>
+        </processes>
+        <output>
+            <type>VTK</type>
+            <prefix>kirsch_element_deactivation</prefix>
+            <suffix>_ts_{:timestep}_t_{:time}</suffix>
+            <data_mode>Ascii</data_mode>
+            <compress_output>false</compress_output>
+            <timesteps>
+                <pair>
+                    <repeat>1</repeat>
+                    <each_steps>1</each_steps>
+                </pair>
+            </timesteps>
+            <variables>
+                <variable>displacement</variable>
+                <variable>epsilon</variable>
+                <variable>sigma</variable>
+            </variables>
+        </output>
+    </time_loop>
+    <parameters>
+        <parameter>
+            <name>E</name>
+            <type>Constant</type>
+            <value>5000000000.0</value>
+        </parameter>
+        <parameter>
+            <name>nu</name>
+            <type>Constant</type>
+            <value>0.3</value>
+        </parameter>
+        <parameter>
+            <name>zero</name>
+            <type>Constant</type>
+            <value>0.0</value>
+        </parameter>
+        <parameter>
+            <name>initial_displacement</name>
+            <type>Constant</type>
+            <values>0 0</values>
+        </parameter>
+        <parameter>
+            <name>sigma0</name>
+            <type>Function</type>
+            <expression>0.0</expression>
+            <expression>if (sqrt(x^2 + (y + 857.0)^2)&gt;6.5) -20000000.0; else 0.0</expression>
+            <expression>if (sqrt(x^2 + (y + 857.0)^2)&gt;6.5) -6000000.0; else 0.0</expression>
+            <expression>0.0</expression>
+        </parameter>
+        <parameter>
+            <name>sigma_top</name>
+            <type>Constant</type>
+            <value>-20000000.0</value>
+        </parameter>
+        <parameter>
+            <name>decay_function</name>
+            <type>Function</type>
+            <expression>if (t&gt;172800.0) 0.0; else 1 - t/172800.0</expression>
+        </parameter>
+    </parameters>
+    <process_variables>
+        <process_variable>
+            <name>displacement</name>
+            <components>2</components>
+            <order>2</order>
+            <initial_condition>initial_displacement</initial_condition>
+            <compensate_non_equilibrium_initial_residuum>true</compensate_non_equilibrium_initial_residuum>
+            <boundary_conditions>
+                <boundary_condition>
+                    <type>Dirichlet</type>
+                    <mesh>left</mesh>
+                    <component>0</component>
+                    <parameter>zero</parameter>
+                </boundary_condition>
+                <boundary_condition>
+                    <type>Dirichlet</type>
+                    <mesh>bottom</mesh>
+                    <component>1</component>
+                    <parameter>zero</parameter>
+                </boundary_condition>
+                <boundary_condition>
+                    <type>Neumann</type>
+                    <mesh>top</mesh>
+                    <component>1</component>
+                    <parameter>sigma_top</parameter>
+                </boundary_condition>
+                <boundary_condition>
+                    <mesh>arc</mesh>
+                    <type>ReleaseNodalForce</type>
+                    <time_decay_parameter>decay_function</time_decay_parameter>
+                </boundary_condition>
+            </boundary_conditions>
+            <deactivated_subdomains>
+                <deactivated_subdomain>
+                    <time_interval>
+                        <start>0</start>
+                        <end>1e+18</end>
+                    </time_interval>
+                    <material_ids>1</material_ids>
+                </deactivated_subdomain>
+            </deactivated_subdomains>
+        </process_variable>
+    </process_variables>
+    <nonlinear_solvers>
+        <nonlinear_solver>
+            <name>basic_newton</name>
+            <type>Newton</type>
+            <max_iter>10</max_iter>
+            <linear_solver>general_linear_solver</linear_solver>
+        </nonlinear_solver>
+    </nonlinear_solvers>
+    <linear_solvers>
+        <linear_solver>
+            <name>general_linear_solver</name>
+            <eigen>
+                <solver_type>SparseLU</solver_type>
+            </eigen>
+            <petsc>
+                <parameters>-ksp_type bcgs -pc_type bjacobi -ksp_rtol 1.e-18 -ksp_atol 1.e-18 -ksp_max_it 4000</parameters>
+            </petsc>
+        </linear_solver>
+    </linear_solvers>
+</OpenGeoSysProject>

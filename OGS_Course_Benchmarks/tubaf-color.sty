@@ -1,0 +1,89 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{tubaf-color}[2024-04-18 TUBAF package for color definitions (using xcolor) by Max Weiner]
+
+\RequirePackage{xcolor}
+\RequirePackage{scrbase}
+
+\DeclareKeys[tubaf-color]{%
+	purpose.store=\@tubaf@color@purpose,
+	purpose.usage=preamble,
+}
+
+\SetKeys[tubaf-color]{
+	purpose=digital,
+}
+
+\ProcessKeyOptions[tubaf-color]
+
+\AddToHook{begindocument/before}{
+	\Ifstr{\@tubaf@color@purpose}{print}{%
+		\selectcolormodel{cmyk}
+	}{%
+		\selectcolormodel{RGB}
+	}
+
+	% Hausfarbe
+	\definecolor{tubaf-primary}{cmyk/RGB}{1.0,0.5,0.0,0.0/0,105,180}
+	\definecolor{tubaf-primary-dark}{cmyk/RGB}{1.0,0.5,0.0,0.4/0,74,125}
+	\definecolor{tubaf-black}{cmyk/RGB}{0.0,0.0,0.0,1.0/0,0,0}
+	\definecolor{tubaf-white}{cmyk/RGB}{0.0,0.0,0.0,0.0/255,255,255}
+
+	%%% Kompatibilität mit früheren Versionen
+	\definecolor{TUBAFhausfarbe}{cmyk/RGB}{1.0,0.5,0.0,0.0/0,105,180}
+	%%%
+
+	% Profilfarben (inkl. invertierte Profilfaben)
+	\definecolor{tubaf-geo}{cmyk/RGB}{0.2,0.3,0.8,0.45/139,117,48}
+	\definecolor{tubaf-geo-inv}{cmyk/RGB}{0.2,0.3,0.65,0.0/213,178,107}
+	\definecolor{tubaf-material}{cmyk/RGB}{1.0,0.0,0.2,0.3/0,123,153}
+	\definecolor{tubaf-material-inv}{cmyk/RGB}{0.3,0.0,0.1,0.0/190,226,233}
+	\definecolor{tubaf-energy}{cmyk/RGB}{0.3,1.0,0.7,0.0/183,30,63}
+	\definecolor{tubaf-energy-inv}{cmyk/RGB}{0.1,0.4,0.4,0.0/229,170,148}
+	\definecolor{tubaf-environment}{cmyk/RGB}{0.8,0.0,1.0,0.25/21,136,46}
+	\definecolor{tubaf-environment-inv}{cmyk/RGB}{0.35,0.0,0.4,0.0/181,216,175}
+
+	%%% Kompatibilität mit früheren Versionen
+	\definecolor{TUBAFgeo}{cmyk/RGB}{0.2,0.3,0.8,0.45/139,117,48}
+	\definecolor{TUBAFmaterial}{cmyk/RGB}{1.0,0.0,0.2,0.3/0,123,153}
+	\definecolor{TUBAFenergie}{cmyk/RGB}{0.3,1.0,0.7,0.0/183,30,63}
+	\definecolor{TUBAFumwelt}{cmyk/RGB}{0.8,0.0,1.0,0.25/21,136,46}
+	%%%
+
+	% Akzentfarben
+	\definecolor{tubaf-accent-blue1}{cmyk/RGB}{0.52,0.0,0.04,0.25/104,168,194}
+	\definecolor{tubaf-accent-blue2}{cmyk/RGB}{0.4,0.0,0.05,0.0/162,217,239}
+	\definecolor{tubaf-accent-blue3}{cmyk/RGB}{0.7,0.0,0.05,0.0/22,186,231}
+
+	\definecolor{tubaf-accent-brown1}{cmyk/RGB}{0.45,0.55,0.7,0.7/71,54,36}
+	\definecolor{tubaf-accent-brown2}{cmyk/RGB}{0.4,0.45,0.6,0.5/106,89,68}
+	\definecolor{tubaf-accent-brown3}{cmyk/RGB}{0.2,0.3,0.65,0.3/165,140,85}
+
+	\definecolor{tubaf-accent-yellow1}{cmyk/RGB}{0.0,0.15,0.7,0.0/255,217,98}
+	\definecolor{tubaf-accent-yellow2}{cmyk/RGB}{0.0,0.15,0.45,0.0/255,221,158}
+	\definecolor{tubaf-accent-yellow3}{cmyk/RGB}{0.0,0.05,0.2,0.0/255,243,216}
+
+	\definecolor{tubaf-accent-gray1}{cmyk/RGB}{0.3,0.25,0.4,0.2/165,158,137}
+	\definecolor{tubaf-accent-gray2}{cmyk/RGB}{0.2,0.2,0.4,0.15/190,178,147}
+	\definecolor{tubaf-accent-gray3}{cmyk/RGB}{0.1,0.15,0.25,0.0/234,218,197}
+
+	\definecolor{tubaf-accent-green1}{cmyk/RGB}{0.8,0.2,0.5,0.35/20,112,105}
+	\definecolor{tubaf-accent-green2}{cmyk/RGB}{0.7,0.1,0.5,0.1/68,157,137}
+	\definecolor{tubaf-accent-green3}{cmyk/RGB}{0.5,0.0,1.0,0.0/149,193,31}
+	\definecolor{tubaf-accent-green4}{cmyk/RGB}{0.5,0.05,0.5,0.0/143,194,151}
+
+	\definecolor{tubaf-accent-orange1}{cmyk/RGB}{0.05,0.65,0.8,0.0/230,115,60}
+	\definecolor{tubaf-accent-orange2}{cmyk/RGB}{0.1,0.55,1.0,0.0/225,132,9}
+	\definecolor{tubaf-accent-orange3}{cmyk/RGB}{0.0,0.5,0.85,0.0/243,148,51}
+
+	\definecolor{tubaf-accent-red1}{cmyk/RGB}{0.3,0.9,0.75,0.7/82,24,19}
+	\definecolor{tubaf-accent-red2}{cmyk/RGB}{0.15,1.0,0.85,0.6/109,15,14}
+	\definecolor{tubaf-accent-red3}{cmyk/RGB}{0.2,0.9,0.85,0.4/139,40,34}
+	\definecolor{tubaf-accent-red4}{cmyk/RGB}{0.2,0.55,0.6,0.25/169,110,84}
+	\definecolor{tubaf-accent-red5}{cmyk/RGB}{0.1,0.8,0.9,0.3/168,62,28}
+	\definecolor{tubaf-accent-red6}{cmyk/RGB}{0.1,1.0,0.9,0.05/205,18,34}
+
+	\definecolor{tubaf-accent-turquoise1}{cmyk/RGB}{0.65,0.25,0.35,0.25/82,130,135}
+	\definecolor{tubaf-accent-turquoise2}{cmyk/RGB}{0.75,0.1,0.35,0.15/30,149,154}
+	\definecolor{tubaf-accent-turquoise3}{cmyk/RGB}{0.6,0.0,0.3,0.0/102,193,191}
+	\definecolor{tubaf-accent-turquoise4}{cmyk/RGB}{0.5,0.0,0.2,0.0/136,205,211}
+}

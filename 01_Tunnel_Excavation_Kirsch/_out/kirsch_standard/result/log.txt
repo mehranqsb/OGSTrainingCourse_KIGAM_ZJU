@@ -1,0 +1,30 @@
+info: This is OpenGeoSys-6 version 6.5.9. Log version: 2, Log level: info.
+info: OGS starts on 2026-10-01 12:46:43+0200 in serial mode / Python embedded mode.
+info: OMP_NUM_THREADS is set to: 4
+info: Eigen use 4 threads
+info: Reading project file _prj/kirsch_standard.prj.
+info: readRasters ...
+info: readRasters done
+info: ConstantParameter: E
+info: ConstantParameter: nu
+info: ConstantParameter: zero
+info: ConstantParameter: initial_displacement
+info: FunctionParameter: sigma0
+info: ConstantParameter: sigma_top
+info: FunctionParameter: decay_function
+info: Configure mesh 'left' for boundary condition or source term.
+info: Configure mesh 'bottom' for boundary condition or source term.
+info: Configure mesh 'top' for boundary condition or source term.
+info: No source terms for process variable 'displacement' found.
+info: Threads used for ParallelVectorMatrixAssembler: 4.
+info: SmallDeformation process initializeSubmeshOutput().
+info: Initialize processes.
+info: Checking correct model evaluation order in the constitutive setting.
+info: Model evaluation order is correct.
+critical: /project/ProcessLib/BoundaryConditionAndSourceTerm/DirichletBoundaryConditionAuxiliaryFunctions.cpp:37 checkParametersOfDirichletBoundaryCondition() The required bulk node ids map does not exist in the boundary mesh 'left'.
+error: The required bulk node ids map does not exist in the boundary mesh 'left'.
+critical: /project/BaseLib/ConfigTree.cpp:290 onerror() ConfigTree: In file `/home/mehran/Desktop/OGS_Training-Course_KCH/Tunnel_Excavation_Kirsch/_prj/kirsch_standard.prj' at path <process_variables/process_variable/boundary_conditions/boundary_condition>: Key <parameter> has been read 1 time(s) less than it was present in the configuration tree.
+error: ConfigTree: In file `/home/mehran/Desktop/OGS_Training-Course_KCH/Tunnel_Excavation_Kirsch/_prj/kirsch_standard.prj' at path <process_variables/process_variable/boundary_conditions/boundary_condition>: Key <parameter> has been read 1 time(s) less than it was present in the configuration tree.
+critical: /project/BaseLib/ConfigTree.cpp:290 onerror() ConfigTree: In file `/home/mehran/Desktop/OGS_Training-Course_KCH/Tunnel_Excavation_Kirsch/_prj/kirsch_standard.prj' at path <process_variables/process_variable/boundary_conditions/boundary_condition>: Key <parameter> has been read 1 time(s) less than it was present in the configuration tree.
+error: ConfigTree: In file `/home/mehran/Desktop/OGS_Training-Course_KCH/Tunnel_Excavation_Kirsch/_prj/kirsch_standard.prj' at path <process_variables/process_variable/boundary_conditions/boundary_condition>: Key <parameter> has been read 1 time(s) less than it was present in the configuration tree.
+Could not construct OGSSimulation object

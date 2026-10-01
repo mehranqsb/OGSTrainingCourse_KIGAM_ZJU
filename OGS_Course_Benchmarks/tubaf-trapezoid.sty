@@ -1,0 +1,55 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{tubaf-trapezoid}[2024-04-18 TUBAF page for drawing the trapezoid style element in TikZ by Max Weiner]
+
+\RequirePackage{tikz}
+\usetikzlibrary{calc}
+\RequirePackage{tubaf-color}
+\RequirePackage{adjustbox}
+
+\NewDocumentCommand{\tubaftrapezoidbottom}{s o m}{%
+    \IfBooleanTF{#1}{
+        \def\@pathcode{(current page.south west) -- ($(current page.south west)+(0,#3)-\paperwidth*tan(5)*(0,1pt)$) -- ($(current page.south east)+(0,#3)$) -- (current page.south east)}
+    }{
+        \def\@pathcode{(current page.south west) -- ($(current page.south west)+(0,#3)$) -- ($(current page.south east)+(0,#3)+\paperwidth*tan(5)*(0,1pt)$) -- (current page.south east)}
+    }
+    \IfValueTF{#2}{\path [#2] \@pathcode;}{\path [fill=tubaf-primary] \@pathcode;}
+}
+
+\NewDocumentCommand{\tubaftrapezoidtop}{s o m}{%
+    \IfBooleanTF{#1}{
+        \def\@pathcode{(current page.north west) -- ($(current page.north west)-(0,#3)$) -- ($(current page.north east)-(0,#3)+\paperwidth*tan(5)*(0,1pt)$) -- (current page.north east)}
+    }{
+        \def\@pathcode{(current page.north west) -- ($(current page.north west)-(0,#3)-\paperwidth*tan(5)*(0,1pt)$) -- ($(current page.north east)-(0,#3)$) -- (current page.north east)}
+    }
+    \IfValueTF{#2}{\path [#2] \@pathcode;}{\path [fill=tubaf-primary] \@pathcode;}
+}
+
+\NewDocumentCommand{\tubaftrapezoidleft}{s o m}{%
+    \IfBooleanTF{#1}{
+        \def\@pathcode{(current page.north west) -- ($(current page.north west)+(#3,0)-\paperwidth*tan(5)*(1pt,0)$) -- ($(current page.south west)+(#3,0)$) -- (current page.south west)}
+    }{
+        \def\@pathcode{(current page.north west) -- ($(current page.north west)+(#3,0)$) -- ($(current page.south west)+(#3,0)+\paperwidth*tan(5)*(1pt,0)$) -- (current page.south west)}
+    }
+    \IfValueTF{#2}{\path [#2] \@pathcode;}{\path [fill=tubaf-primary] \@pathcode;}
+}
+
+\NewDocumentCommand{\tubaftrapezoidright}{s o m}{%
+    \IfBooleanTF{#1}{
+        \def\@pathcode{(current page.north east) -- ($(current page.north east)-(#3,0)$) -- ($(current page.south east)-(#3,0)+\paperwidth*tan(5)*(1pt,0)$) -- (current page.south east)}
+    }{
+        \def\@pathcode{(current page.north east) -- ($(current page.north east)-(#3,0)-\paperwidth*tan(5)*(1pt,0)$) -- ($(current page.south east)-(#3,0)$) -- (current page.south east)}
+    }
+    \IfValueTF{#2}{\path [#2] \@pathcode;}{\path [fill=tubaf-primary] \@pathcode;}
+}
+
+\NewDocumentCommand{\pagebackgroundimage}{s o m}{
+    \IfNoValueTF{#2}{\def\@anchor{center}}{\def\@anchor{#2}}
+    \IfBooleanTF{#1}{
+        \node[anchor=\@anchor, inner sep=-1px] at (current page.\@anchor) {#3};
+    }{
+        \node[anchor=\@anchor, inner sep=-1px] at (current page.\@anchor) {\adjustbox{
+                min width = 1.01\paperwidth,
+                min height = 1.01\paperheight
+            }{#3}};
+    }
+}

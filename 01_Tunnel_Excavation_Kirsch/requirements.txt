@@ -1,0 +1,3 @@
+# The `ogs` extra installs the platform-specific OpenGeoSys executable wheel.
+ogstools[ogs]>=0.8,<0.9
+jupyterlab>=4,<5

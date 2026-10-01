@@ -1,0 +1,948 @@
+\documentclass[11pt,a4paper]{tubaf-report}
+\usepackage[sans]{tubaf-fonts}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\graphicspath{{report/}{./}}
+
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{amsmath,amssymb,bm}
+\usepackage{booktabs,longtable,tabularx}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{microtype}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue!50!black]{hyperref}
+
+\definecolor{codebg}{RGB}{246,246,246}
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  framerule=0.2pt,
+  xleftmargin=5pt,
+  xrightmargin=5pt,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false
+}
+
+\newcommand{\ud}{\,\mathrm{d}}
+\newcommand{\vect}[1]{\bm{#1}}
+\newcommand{\ten}[1]{\bm{#1}}
+\newcommand{\B}{\mathbf{B}}
+\newcommand{\N}{\mathbf{N}}
+\newcommand{\trans}{\mathsf{T}}
+\newcommand{\MPa}{\,\mathrm{MPa}}
+\newcommand{\GPa}{\,\mathrm{GPa}}
+\newcommand{\kPa}{\,\mathrm{kPa}}
+\newcommand{\degC}{\,^\circ\mathrm{C}}
+
+\title[OGS Training Course -- Benchmark Exercises]{Coupled Processes in Geological Media with OpenGeoSys}
+\subtitle{Course exercises: tunnel excavation (Kirsch benchmark),
+  fluid injection into fractured rock (LIE vs.\ EFPM),
+  and thermo-hydro-mechanics of a heated tunnel (TRM)
+}
+\author[Ghasabeh and Nagel]{Mehran Ghasabeh \and Thomas Nagel}
+\date{October 2026}
+\subject{OpenGeoSys Training Course}
+\publishers{Institute of Geotechnics, TU Bergakademie Freiberg}
+\titlefoot{Joint OpenGeoSys Training Course -- UFZ, KIGAM, Zhejiang University, and TUBAF}
+\setlength{\logoheadsize}{2.5cm}
+\makeatletter
+\renewcommand{\tubaf@title@logo}{\insertlogo{5.5cm}}
+\makeatother
+\logo{\includegraphics{UFZ_KIGAM_ZJU}}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\clearpage
+
+\chapter{Introduction}
+\label{ch:intro}
+
+This report documents the three benchmark exercises of the joint OpenGeoSys
+training course. All exercises use the open-source finite-element simulator
+OpenGeoSys (OGS)~\cite{bilke2019,kolditz2012,ogs-docs}, version 6.5.9,
+installed as a Python wheel. The exercises increase in physical complexity:
+
+\begin{enumerate}[nosep]
+  \item \textbf{Tunnel excavation -- Kirsch benchmark}
+        (\texttt{Tunnel\_Excavation\_Kirsch/}): linear-elastic excavation of a
+        circular tunnel with the \texttt{ReleaseNodalForce} boundary
+        condition, verified against the analytical Kirsch
+        solution~\cite{kirsch1898}.
+  \item \textbf{Fluid injection into fractured rock}
+        (\texttt{LIE\_EFPM/}): hydro-mechanically coupled injection into a
+        fractured, nearly impermeable matrix, comparing lower-dimensional
+        interface elements (LIE) with the embedded fracture permeability
+        model (EFPM), verified against analytical and one-dimensional
+        finite-difference references.
+  \item \textbf{Heated tunnel in Opalinus Clay}
+        (\texttt{TRM/}): coupled thermo--hydro--mechanical response of a
+        bentonite-buffered, heat-emitting tunnel modelled with the
+        \path{THERMO_RICHARDS_MECHANICS} process, following the heater
+        benchmark of Pitz et al.~\cite{pitz2023} (DECOVALEX-2023 Task~C), in a
+        fully saturated and a partially saturated configuration.
+\end{enumerate}
+
+\section{Common workflow}
+
+All three exercises follow the same reproducible structure:
+\begin{itemize}[nosep]
+  \item A single Jupyter notebook per problem ---
+        \path{01_tunnel_excavation_kirsch.ipynb},
+        \path{02_lie_efpm_injection.ipynb}, and
+        \path{03_trm_heated_tunnel.ipynb} --- is the
+        only place where parameter values are defined. It drives the
+        complete workflow:
+        meshing, project-file generation, OGS execution, post-processing, and
+        verification.
+  \item A mesh module (\texttt{mesh\_*.py}, class \texttt{MeshGenerator})
+        builds structured Gmsh meshes, converts them to OGS \texttt{vtu}
+        format, and extracts the boundary meshes.
+  \item A project module (\texttt{prj\_*.py}, class \texttt{PrjGenerator} or
+        \texttt{ProjectGenerator}) assembles the OGS project file with the
+        \texttt{ogstools} \texttt{Project} API. All physical and numerical
+        settings enter as required keyword arguments; the modules contain no
+        hidden defaults.
+\end{itemize}
+This separation---\emph{values in the notebook, structure in small Python
+modules, verification against analytical or published references}---is
+intended as a reusable template for the participants' own models.
+
+\section{Installation}
+\label{sec:installation}
+
+The course was developed and tested on Linux with Python~3.12; macOS and
+Windows work analogously. All software installs into one virtual environment;
+no compilation of OGS is required:
+\begin{lstlisting}[language=bash]
+python3 -m venv ~/.venvs/ogs312
+source ~/.venvs/ogs312/bin/activate
+pip install --upgrade pip
+pip install ogs==6.5.9 ogstools==0.8.2 gmsh pyvista jupyter
+python -m ipykernel install --user --name ogs312 --display-name "Python (ogs312)"
+\end{lstlisting}
+Open any course notebook in Jupyter and select the \texttt{Python (ogs312)}
+kernel. Running all cells regenerates meshes and project files, runs OGS, and
+produces the figures. Separate step-by-step installation guides for Windows,
+macOS, and Ubuntu are provided alongside this report.
+
+{\sloppy
+One known limitation is relevant for the second exercise: in released OGS
+versions, including the 6.5.9 wheel, the process
+\path{HYDRO_MECHANICS_WITH_LIE} supports only a \emph{single}
+displacement jump. The
+double-fracture case is therefore run with the EFPM approach; double-fracture
+LIE simulations require a custom build from the development branch
+\path{LIE_HM_mutipleDisplacementJump} and are not part of the course.\par}
+
+%=====================================================================
+\chapter{Problem 1: Tunnel excavation and the Kirsch benchmark}
+\label{ch:kirsch}
+
+\section{Purpose}
+
+Excavation removes both material and the tractions that this material exerted
+on the surrounding rock. The OGS \texttt{ReleaseNodalForce} boundary condition
+represents this unloading while retaining a mesh that already contains the
+opening: the model begins from an initially stressed, undeformed state and
+progressively withdraws the equivalent nodal forces on the excavation
+boundary. After working through this exercise a participant should be able to
+\begin{itemize}[nosep]
+  \item distinguish an initial-stress excavation analysis from a model loaded
+        from an unstressed reference configuration;
+  \item derive the non-equilibrium initial residual and the equivalent nodal
+        forces on the excavation wall;
+  \item construct the plane-strain initial stress consistently; and
+  \item verify OGS results against the Kirsch solution without confusing
+        discretization error with nodal stress-extrapolation artifacts.
+\end{itemize}
+A dedicated companion report with the complete derivation is provided in the
+folder \path{Tunnel_Excavation_Kirsch/report/}; this chapter
+summarizes it.
+
+\section{Benchmark definition}
+
+A quarter model of a circular opening is used; the origin of the polar system
+is the tunnel centre and $\theta$ is measured counter-clockwise from the
+positive horizontal axis. Gravity is disabled; the in-situ stress is
+prescribed directly.
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Quantity & Symbol & Value \\
+\midrule
+Tunnel radius & $a$ & $6.5\,\mathrm{m}$ \\
+Quarter-domain extent & $L$ & $70\,\mathrm{m}$ \\
+Young's modulus & $E$ & $5.0\GPa$ \\
+Poisson's ratio & $\nu$ & $0.30$ \\
+Vertical compressive stress magnitude & $P$ & $20\MPa$ \\
+Excavation duration & $t_{\mathrm e}$ & $1.728\times10^5\,\mathrm{s}=2\,\mathrm d$ \\
+Simulation end time & $t_{\mathrm{end}}$ & $3.456\times10^5\,\mathrm{s}=4\,\mathrm d$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+OGS uses a tension-positive stress convention, so the applied far-field
+stress is $\sigma_\infty=-P=-20\MPa$. Symmetry conditions are $u_x=0$ on the
+left and $u_y=0$ on the bottom boundary; a vertical traction
+$\bar t_y=-P$ acts on the top; the right boundary is traction-free,
+consistent with the remote uniaxial stress state. The finite outer boundary
+lies at $L/a\approx10.8$, so small differences from the infinite-domain
+analytical solution are expected near the outer boundary.
+
+\subsection{Plane-strain initial stress}
+\label{sec:plane-strain}
+
+The two-dimensional small-deformation process stores the stress vector as
+$\vect{\sigma}=[\sigma_{xx},\sigma_{yy},\sigma_{zz},\sigma_{xy}]^{\trans}$.
+Plane strain requires $\varepsilon_{zz}=0$, and isotropic Hooke's law then
+yields the closure
+\begin{equation}
+  \boxed{\sigma_{zz}=\nu\left(\sigma_{xx}+\sigma_{yy}\right).}
+  \label{eq:plane-strain-closure}
+\end{equation}
+For the intact uniaxial initial state, $\sigma_{0,xx}=0$ and
+$\sigma_{0,yy}=-P$, hence
+\begin{equation}
+  \sigma_{0,zz}=-\nu P=-6\MPa,
+  \qquad
+  \vect{\sigma}_0=[0,-20,-6,0]^{\trans}\MPa.
+  \label{eq:initial-stress}
+\end{equation}
+Omitting $\sigma_{0,zz}$ does not change the in-plane equilibrium equations,
+but it shifts the computed $\sigma_{zz}$ by $6\MPa$ and therefore corrupts
+comparisons of the full stress tensor, the mean stress, and the octahedral
+shear stress.
+
+\section{Analytical Kirsch solution}
+\label{sec:kirsch-analytical}
+
+For a traction-free circular opening of radius $a$ in an infinite isotropic
+elastic medium under the remote vertical stress $\sigma_\infty$, the in-plane
+stresses~\cite{kirsch1898} are
+\begin{align}
+\sigma_{rr}(r,\theta)
+ &= \frac{\sigma_\infty}{2}\left(1-\frac{a^2}{r^2}\right)
+  - \frac{\sigma_\infty}{2}
+    \left(1-\frac{4a^2}{r^2}+\frac{3a^4}{r^4}\right)\cos 2\theta,
+  \label{eq:kirsch-rr}\\
+\sigma_{\theta\theta}(r,\theta)
+ &= \frac{\sigma_\infty}{2}\left(1+\frac{a^2}{r^2}\right)
+  + \frac{\sigma_\infty}{2}
+    \left(1+\frac{3a^4}{r^4}\right)\cos 2\theta,
+  \label{eq:kirsch-tt}\\
+\sigma_{r\theta}(r,\theta)
+ &= \frac{\sigma_\infty}{2}
+    \left(1+\frac{2a^2}{r^2}-\frac{3a^4}{r^4}\right)\sin 2\theta.
+  \label{eq:kirsch-rt}
+\end{align}
+At $r=a$: $\sigma_{rr}=\sigma_{r\theta}=0$ (traction-free wall),
+$\sigma_{\theta\theta}=3\sigma_\infty=-60\MPa$ at the sidewall
+($\theta=0$), and $\sigma_{\theta\theta}=-\sigma_\infty=+20\MPa$ at the
+crown ($\theta=90^\circ$). The compatible out-of-plane stress follows from
+Eq.~\eqref{eq:plane-strain-closure} applied to the rotation-invariant
+in-plane trace:
+\begin{equation}
+  \sigma_{zz}(r,\theta)
+  =\nu\left[\sigma_{rr}(r,\theta)+\sigma_{\theta\theta}(r,\theta)\right].
+  \label{eq:kirsch-zz}
+\end{equation}
+
+\section{Release-nodal-force formulation}
+
+For quasi-static small deformation, the discrete residual of the weak
+equilibrium form reads
+\begin{equation}
+  \vect{r}(\hat{\vect{u}},t)
+  =\vect{F}^{\mathrm{int}}(\hat{\vect{u}})
+   -\vect{F}^{\mathrm{ext}}(t)=\vect{0},
+  \qquad
+  \vect{F}^{\mathrm{int}}
+  =\int_\Omega \B^{\trans}\vect{\sigma}\ud\Omega,
+  \qquad
+  \ten{\sigma}=\ten{\sigma}_0+\mathbb{C}:\ten{\varepsilon}(\vect{u}).
+  \label{eq:discrete-residual}
+\end{equation}
+At $t=0$ the mesh already contains the opening, carries the intact in-situ
+stress $\ten{\sigma}_0$, and has zero displacement. This state is not in
+equilibrium; OGS evaluates the \emph{non-equilibrium initial residual} once,
+\begin{equation}
+  \vect{r}^{\mathrm{neq}}
+  =\int_\Omega\B^{\trans}\vect{\sigma}_0\ud\Omega
+   -\vect{F}^{\mathrm{ext}}(0).
+  \label{eq:rneq}
+\end{equation}
+Integration by parts shows that for a uniform (divergence-free) initial
+stress, the free-degree entries of $\vect{r}^{\mathrm{neq}}$ live on the
+excavation boundary $\Gamma_{\mathrm{exc}}$; the consistent equivalent nodal
+force at wall node $i$ is
+\begin{equation}
+  \vect{F}_{0,i}
+  =\int_{\Gamma_{\mathrm{exc}}}
+    N_i^{\trans}\ten{\sigma}_0\vect{n}\ud\Gamma .
+  \label{eq:F0}
+\end{equation}
+For the uniaxial initial stress this support traction has normal
+component $t_n=-P\sin^2\theta$ and tangential component
+$t_\theta=P\sin\theta\cos\theta$; it is a spatially varying traction field,
+\emph{not} a uniform pressure (that interpretation is valid only for an
+isotropic initial stress $\ten{\sigma}_0=-p_0\mathbf{I}$).
+
+OGS subtracts the stored initial residual in every nonlinear iteration
+(\emph{residual compensation}), so that $\vect{u}=\vect{0}$ satisfies
+equilibrium at $t=0$; the compensation represents the support of the
+not-yet-excavated core. The boundary condition then withdraws this support
+with a user-defined decay function $f(t)$, $f(0)=1$, yielding the effective
+wall residual
+\begin{equation}
+  \boxed{\tilde{\vect{r}}_i
+  =\vect{F}^{\mathrm{int}}_i
+   -\vect{F}^{\mathrm{ext}}_i
+   -f(t)\vect{F}_{0,i}=\vect{0}.}
+  \label{eq:effective-residual}
+\end{equation}
+The notebook uses the linear decay
+\begin{equation}
+  f(t)=
+  \begin{cases}
+    1-t/t_{\mathrm e}, & 0\le t\le t_{\mathrm e},\\[4pt]
+    0, & t>t_{\mathrm e},
+  \end{cases}
+  \label{eq:decay}
+\end{equation}
+so the wall is in-situ supported at $t=0$, partially unloaded for
+$0<t<t_{\mathrm e}$, and traction-free for $t\ge t_{\mathrm e}$. Because the
+material is linear elastic, the excavation-induced response scales linearly
+with the released fraction $1-f(t)$.
+
+\begin{center}
+\begin{tikzpicture}[scale=0.95]
+  \draw[->] (0,0) -- (7,0) node[right] {$t$};
+  \draw[->] (0,0) -- (0,3) node[above] {$f(t)$};
+  \draw[very thick,blue!60!black] (0,2.3) -- (4.5,0) -- (6.5,0);
+  \draw[dashed] (4.5,0) -- (4.5,2.3);
+  \draw[dashed] (0,2.3) -- (4.5,2.3);
+  \node[left] at (0,2.3) {$1$};
+  \node[below] at (4.5,0) {$t_{\mathrm e}$};
+  \node[blue!60!black] at (2.8,1.6) {$1-t/t_{\mathrm e}$};
+\end{tikzpicture}
+\end{center}
+
+\section{OGS realization}
+
+The process variable requests the residual compensation and the wall boundary
+condition:
+\begin{lstlisting}[language=XML]
+<process_variable>
+  <name>displacement</name>
+  <components>2</components>
+  <order>2</order>
+  <initial_condition>initial_displacement</initial_condition>
+  <compensate_non_equilibrium_initial_residuum>true
+  </compensate_non_equilibrium_initial_residuum>
+  <boundary_conditions>
+    <boundary_condition>
+      <mesh>arc</mesh>
+      <type>ReleaseNodalForce</type>
+      <time_decay_parameter>decay_function</time_decay_parameter>
+    </boundary_condition>
+  </boundary_conditions>
+</process_variable>
+\end{lstlisting}
+The mechanics process references the initial-stress parameter
+\texttt{sigma0} through its \path{initial_stress} tag, with the
+plane-strain components of Eq.~\eqref{eq:initial-stress}, and the decay
+function of Eq.~\eqref{eq:decay} enters as
+\begin{lstlisting}[language=XML]
+<parameter>
+  <name>decay_function</name>
+  <type>Function</type>
+  <expression>if (t>172800) 0.0; else 1-t/172800</expression>
+</parameter>
+\end{lstlisting}
+
+Two analyses are compared: the \emph{release} formulation (initial stress,
+\texttt{ReleaseNodalForce} wall, compensation enabled) and a \emph{standard}
+formulation (zero initial stress, natural traction-free wall, load applied in
+one step from the unstressed configuration). The final total stresses must
+agree; the displacement fields need not, because they refer to different
+reference configurations.
+
+\section{Verification results}
+
+The executed notebook (OGS 6.5.9) runs five simulations; all return code zero
+and all final stress checks are asserted programmatically.
+
+\begin{center}
+\begin{tabularx}{\textwidth}{@{}Xrrr@{}}
+\toprule
+Measure & Analytical & Quadratic & Linear \\
+\midrule
+$\sigma_{rr}(a,0^\circ)$ / MPa & $0$ & $-0.133$ & $-2.620$ \\
+$\sigma_{\theta\theta}(a,0^\circ)$ / MPa & $-60$ & $-61.581$ & $-62.476$ \\
+Release--standard maximum stress difference / MPa
+ & $0$ & $9.9\times10^{-11}$ & $4.5\times10^{-12}$ \\
+Initial release-model displacement / m & $0$ & $0$ & $0$ \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The release and standard stress fields agree to numerical precision. The
+nonzero extrapolated $\sigma_{rr}$ at the wall is not a failure of the
+traction boundary condition: OGS computes stress at integration points and
+extrapolates to nodes for VTK output, and this postprocessing step, together
+with mesh resolution and element order, creates the wall-node discrepancy.
+Quadratic elements improve the wall value substantially on the present mesh.
+
+An element-deactivation variant fills the opening with a quarter-disc of
+inactive elements (material ID~1). OGS assigns zero integration-point stress
+to inactive cells, so nodal extrapolation at the shared wall nodes mixes
+physical rock stresses with zeros; the notebook therefore excludes the shared
+wall node from the checks. Away from that interface, the deactivation and
+hole-only in-plane stresses agree within $10^{-8}\MPa$. For wall
+verification one should use integration-point or cell-based stresses, or a
+sample point demonstrably inside the active rock.
+
+The notebook additionally demonstrates polar postprocessing
+(\path{ot.variables.stress.to_polar}) and maps the mean stress
+$\sigma_{\mathrm m}=\tfrac13\operatorname{tr}\ten{\sigma}$ and octahedral
+shear stress $\tau_{\mathrm{oct}}=\sqrt{2J_2/3}$ --- the invariant pair
+relevant for pressure-dependent failure criteria: excavation simultaneously
+concentrates shear and removes confinement at the wall.
+
+%=====================================================================
+\chapter{Problem 2: Fluid injection into fractured rock (LIE vs.\ EFPM)}
+\label{ch:lie}
+
+\section{Purpose and background}
+
+The second exercise addresses hydro-mechanically coupled processes in
+fault-controlled reservoirs, motivated by deep geothermal systems in
+fractured carbonates. A pre-existing fracture in a nearly impermeable rock
+matrix is pressurised by fluid injection and subsequently depressurised by
+production. Two modelling strategies are benchmarked against each other and
+against analytical references:
+\begin{itemize}[nosep]
+  \item \textbf{LIE} --- the fracture is a lower-dimensional interface
+        element with an explicit displacement-jump unknown
+        (process \path{HYDRO_MECHANICS_WITH_LIE}); fracture flow follows
+        the cubic law with pressure-dependent aperture.
+  \item \textbf{EFPM} --- the fracture is a thin band of standard continuum
+        elements (process \path{HYDRO_MECHANICS}) whose permeability and
+        stiffness are \emph{equivalent} upscaled properties: the medium
+        property
+        \texttt{Orthotropic\allowbreak Embedded\allowbreak Fracture\allowbreak \allowbreak Permeability}
+        and a Gerrard-type equivalent modulus~\cite{gerrard1982}.
+\end{itemize}
+Learning objectives: discrete versus equivalent-continuum fracture
+representations, the cubic law, hydro-mechanical aperture coupling, and a
+verification methodology combining closed-form and numerical references.
+
+\section{Model definition}
+
+\subsection{Geometry and mesh}
+
+The domain is a plane-strain rock-matrix block of length
+$12.5\,\mathrm m$ ($x\in[0.1,12.6]\,\mathrm m$) and height $1\,\mathrm m$. A
+single horizontal fracture runs along $y=0.5\,\mathrm m$ from the left to
+the right edge. In the LIE model it is a line of 1D interface elements (34
+elements embedded in 1292 quadratic quads); in the EFPM model it is a band of
+thickness $s=1\,\mathrm{mm}$, one element thick (39 band elements within
+2301 quads). The double-fracture variant places fractures at
+$y=0.3\,\mathrm m$ and $y=0.7\,\mathrm m$. All meshes are structured,
+transfinite, graded towards the fracture, and converted to quadratic
+elements; displacement is quadratic, pressure linear (Taylor--Hood).
+
+\subsection{Fracture flow and the two representations}
+
+Fracture flow obeys the \emph{cubic law}~\cite{witherspoon1980}: a fracture
+of hydraulic aperture $b$ has permeability and transmissivity
+\begin{equation}
+  k_{\mathrm F}=\frac{b^2}{12},
+  \qquad
+  T_{\mathrm{LIE}}=k_{\mathrm F}\,b=\frac{b^3}{12}.
+  \label{eq:cubic}
+\end{equation}
+In the LIE model the aperture evolves with the normal displacement jump; in
+linearized form $b=b_0+\Delta p/K_n$, and the fracture storage combines
+fluid storage and fracture compliance,
+$\beta=b\,S_{\mathrm F}+1/K_n$.
+
+In the EFPM the band of width $s$ carries the upscaled permeability
+\begin{equation}
+  \ten k = k_{\mathrm M}\ten I
+         + \frac{b}{a}\,\frac{b^2}{12}
+           \left(\ten I-\vect n\otimes\vect n\right),
+  \qquad
+  b = b_0 + a\,\langle\varepsilon_n-\varepsilon_0\rangle ,
+  \label{eq:efpm-k}
+\end{equation}
+where $a$ is the mean fracture spacing, $\vect n$ the fracture normal, and
+$\varepsilon_n$ the strain normal to the fracture. Choosing $s=a$ makes the
+band transmissivity $T_{\mathrm{EFPM}}=k\,s$ equal to
+Eq.~\eqref{eq:cubic}. With $b_0=0$, the initial aperture
+$b(t{=}0)=10\,\mu\mathrm m$ is encoded by the threshold strain
+$\varepsilon_0=-b(t{=}0)/a=-10^{-2}$. The band's normal compliance mimics the
+fracture stiffness through the Gerrard equivalent
+modulus~\cite{gerrard1982},
+\begin{equation}
+  \frac{1}{E_{\mathrm{RM}}}
+  =\frac{1}{E_{\mathrm M}}+\frac{1}{K_n\,a}
+  \quad\Rightarrow\quad
+  E_{\mathrm{RM}}=9.98\times10^{7}\,\mathrm{Pa}.
+  \label{eq:gerrard}
+\end{equation}
+
+\subsection{Parameters}
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Property & Symbol & Value \\
+\midrule
+\multicolumn{3}{@{}l@{}}{\emph{Rock matrix}} \\
+Young's modulus & $E$ & $60\GPa$ \\
+Poisson's ratio & $\nu$ & $0$ \\
+Solid density & $\varrho_{\mathrm s}$ & $2716\,\mathrm{kg/m^3}$ \\
+Porosity & $\phi$ & $0.001$ \\
+Permeability & $k_{\mathrm M}$ & $10^{-21}\,\mathrm{m^2}$ \\
+Biot coefficient & $\alpha_{\mathrm B}$ & $1$ \\
+Storage & $S$ & $10^{-10}\,\mathrm{1/Pa}$ \\
+\multicolumn{3}{@{}l@{}}{\emph{Fluid}} \\
+Density & $\varrho_{\mathrm{LR}}$ & $1000\,\mathrm{kg/m^3}$ \\
+Viscosity & $\mu$ & $10^{-3}\,\mathrm{Pa\,s}$ \\
+Compressibility & $\kappa_{\mathrm f}$ & $10^{-7}\,\mathrm{1/Pa}$ \\
+\multicolumn{3}{@{}l@{}}{\emph{Fracture (LIE)}} \\
+Normal and shear stiffness & $K_n=K_s$ & $10^{11}\,\mathrm{Pa/m}$ \\
+Initial aperture & $b_0$ & $10^{-5}\,\mathrm m$ \\
+Fracture storage & $S_{\mathrm F}$ & $10^{-10}\,\mathrm{1/Pa}$ \\
+Permeability model & & \texttt{CubicLawPermeability} \\
+\multicolumn{3}{@{}l@{}}{\emph{Fracture band (EFPM)}} \\
+Band thickness, fracture spacing & $s=a$ & $10^{-3}\,\mathrm m$ \\
+Threshold strain & $\varepsilon_0$ & $-10^{-2}$ \\
+Band Young's modulus & $E_{\mathrm{RM}}$ & $9.98\times10^{7}\,\mathrm{Pa}$ \\
+Fracture normal & $\vect n$ & $(0,1,0)$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Initial conditions, boundary conditions, and injection schedule}
+
+The LIE model works with absolute quantities: initial and far-field pore
+pressure $p_0=11\MPa$ (also a Dirichlet condition at the outlet point on
+the right edge), vertical total load $\sigma_{yy}=-50\MPa$ on the top
+boundary, and an initial effective stress of
+$\sigma'_{yy}=-39\MPa$ in the matrix and on the fracture. The EFPM model is
+formulated in \emph{relative} quantities (zero initial pressure, load, and
+stress); its results are compared after adding $p_0$. Displacement
+conditions are $u_y=0$ on the bottom and $u_x=0$ on the left and right
+boundaries.
+
+Fluid is injected at the left fracture end at the mass rate
+$\dot m=2\times10^{-5}\,\mathrm{kg/(s\,m)}$, i.e.\ a volumetric rate
+$Q=2\times10^{-8}\,\mathrm{m^3/(s\,m)}$: in the LIE model as a point source
+at the fracture inlet node, in the EFPM model as the equivalent flux
+$Q/s=2\times10^{-2}\,\mathrm{m/s}$ on the $1\,\mathrm{mm}$ inlet edge of the
+band. The schedule ramps the rate up over $0$--$100\,\mathrm s$, holds it
+constant until $1000\,\mathrm s$, reverses it linearly over
+$1000$--$1100\,\mathrm s$ (switch from injection to production), and holds
+the reversed rate until the end time $t_{\mathrm{end}}=1500\,\mathrm s$.
+
+\subsection{Numerical settings}
+
+Backward Euler with iteration-number-based time stepping (initial
+$\Delta t=10\,\mathrm s$, $\Delta t\in[0.1,20]\,\mathrm s$); damped Newton
+(damping factor $0.8$, maximum 50 iterations) with per-component
+$\Delta x$ criteria; Eigen \texttt{SparseLU} with scaling as the linear
+solver. All three course cases run with the stock OGS~6.5.9 wheel:
+single-fracture LIE in $83\,\mathrm s$ (76 steps), single-fracture EFPM in
+$357\,\mathrm s$ (95 steps), double-fracture EFPM in about $3$ minutes
+(76 steps), with no rejected steps. The systems are ill-conditioned (the
+$K_n=10^{11}\,\mathrm{Pa/m}$ penalty-like fracture stiffness), which is why
+a direct solver is used; on builds with Intel MKL, \texttt{PardisoLU} solves
+the same systems roughly $2.8\times$ faster.
+
+\section{Verification and results}
+
+\subsection{Analytical and 1D references}
+
+Two independent references are built in the notebook for the single-fracture
+case:
+\begin{enumerate}[nosep]
+  \item a \emph{linearized closed-form solution} of the fracture diffusion
+        problem of Carslaw--Jaeger type~\cite{carslaw1959}
+        (constant-flux half-line, $\operatorname{ierfc}$ kernel), with the
+        $100\,\mathrm s$ injection ramp incorporated exactly via Duhamel's
+        principle; and
+  \item a \emph{nonlinear 1D finite-difference solution} of
+        \begin{equation}
+          \beta(b)\,\frac{\partial p}{\partial t}
+          =\frac{\partial}{\partial x}\!\left(
+          \frac{b^3}{12\mu}\frac{\partial p}{\partial x}\right),
+          \qquad
+          b=b_0+\frac{p-p_0}{K_n},
+          \qquad
+          \beta=b\,S_{\mathrm F}+\frac{1}{K_n},
+          \label{eq:fd-ref}
+        \end{equation}
+        which retains the cubic-law nonlinearity and the ramped source
+        $Q(t)$.
+\end{enumerate}
+Including the injection ramp is essential: without it both references lead
+the simulations systematically. The initial transmissivity, storativity, and
+hydraulic diffusivity are
+$T_0=8.33\times10^{-14}\,\mathrm{m^3/(Pa\,s)}$,
+$\beta_0=1.00\times10^{-11}\,\mathrm{m/Pa}$, and
+$D_0=8.33\times10^{-3}\,\mathrm{m^2/s}$.
+
+\subsection{Key results}
+
+\begin{center}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Quantity (single fracture) & LIE & EFPM & 1D reference \\
+\midrule
+Peak inlet pressure / MPa & $11.489$ & $11.480$ & --- \\
+Inlet overpressure at $t=1000\,\mathrm s$ / kPa & $489.0$ & --- & $505.1$ \\
+Inlet pressure at $t=1500\,\mathrm s$ / MPa & $10.808$ & $10.795$ & --- \\
+Maximum $|u_y|$ at $t\approx1000\,\mathrm s$ / $\mu$m & $4.79$ & $4.69$ & --- \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{itemize}[nosep]
+  \item \textbf{LIE vs.\ EFPM.} Inlet and outlet pressure histories and
+        pressure profiles along the fracture agree within about
+        $0.1$--$0.2\,\%$ throughout injection and production; displacement
+        fields agree within a few percent. The equivalent-continuum
+        representation therefore reproduces the discrete-fracture response
+        for this configuration.
+  \item \textbf{LIE vs.\ analytical references.} The simulated inlet
+        overpressure at the end of injection deviates by $3.3\,\%$ from the
+        nonlinear 1D reference; the residual difference is the 2D elastic
+        compliance of the matrix, which the 1D references do not contain.
+  \item \textbf{Aperture coupling.} During injection the inlet aperture
+        opens from $10$ to about $14.7\,\mu\mathrm m$
+        (fracture permeability from $1.0\times10^{-11}$ to
+        $1.8\times10^{-11}\,\mathrm{m^2}$, consistent with $b^2/12$ ---
+        i.e.\ the transmissivity roughly triples), while the outlet aperture
+        stays at $10\,\mu\mathrm m$; during production the inlet aperture
+        closes below its initial value, to about $8.8\,\mu\mathrm m$ at
+        $t=1500\,\mathrm s$. The pressure pulse is still propagating outward
+        along the fracture while the inlet is already depressurising.
+  \item \textbf{Double fracture (EFPM).} Both fractures respond nearly
+        identically to each other and to the single-fracture case
+        (peak inlet pressures within $0.01\MPa$); the maximum vertical
+        displacement roughly doubles to about $9.4\,\mu\mathrm m$ because
+        both fractures dilate.
+\end{itemize}
+
+As noted in Section~\ref{sec:installation}, released OGS versions support
+only one displacement-jump variable, so the double-fracture configuration is
+run with the EFPM approach in the course; a double-fracture LIE project file
+is included for participants with access to the development branch.
+
+%=====================================================================
+\chapter{Problem 3: Heated tunnel in Opalinus Clay (TRM)}
+\label{ch:trm}
+
+\section{Purpose and background}
+
+The third exercise models the near field of a heat-emitting tunnel --- a
+plane-strain abstraction of the FE heater experiment at the Mont Terri rock
+laboratory --- with the OGS \path{THERMO_RICHARDS_MECHANICS} (TRM)
+process. It follows the systematic benchmark of Pitz et
+al.~\cite{pitz2023} (DECOVALEX-2023 Task~C); the reference paper is included
+in the exercise folder. Learning objectives:
+\begin{itemize}[nosep]
+  \item set up a coupled THM model under the Richards assumption;
+  \item understand thermal pressurisation of pore water in a low-permeability
+        host rock and its anisotropic drainage;
+  \item model unsaturated behaviour: van~Genuchten retention and relative
+        permeability, Bishop effective stress, vapour diffusion, latent heat,
+        saturation-dependent thermal conductivity;
+  \item use orthotropic materials with local coordinate systems; and
+  \item work with mixed-order (Taylor--Hood) elements and interpolated
+        output fields.
+\end{itemize}
+
+\section{Model definition}
+
+\subsection{Geometry and mesh}
+
+A quarter of a $50\,\mathrm m\times50\,\mathrm m$ domain is discretised
+(quarter dimensions $25\,\mathrm m\times25\,\mathrm m$). A granular
+bentonite buffer ring (material ID~0) extends from the heater surface at
+$r_i=0.525\,\mathrm m$ to the tunnel wall at $R=1.24\,\mathrm m$; the
+surrounding Opalinus Clay is material ID~1. The heater itself is not meshed;
+it acts through a heat-flux boundary condition on the inner arc.
+
+The mesh is a structured, transfinite quadrilateral Gmsh mesh (15 nodes per
+block edge, 8 radial nodes across the buffer), converted to 8-node quadratic
+quadrilaterals: 1176 cells (196 buffer, 980 clay) and 3683 nodes. The
+displacement is interpolated with quadratic shape functions and pressure and
+temperature with linear ones (Taylor--Hood). Boundary meshes
+\texttt{left/right/top/bottom/arc\_inner/arc\_outer} are extracted
+automatically.
+
+\subsection{Process and governing equations}
+
+The TRM process solves, in the domain $\Omega$ and for the unknowns
+temperature $T$, liquid pressure $p_{\mathrm{LR}}$, and displacement
+$\vect u$:
+\begin{itemize}[nosep]
+  \item the \textbf{energy balance} of the fluid--solid mixture with
+        effective volumetric heat capacity
+        $(\varrho c_p)_{\mathrm{eff}}$, heat conduction with the effective
+        conductivity $\ten{\lambda}_{\mathrm{eff}}$, and advection by the
+        Darcy flux (plus vapour-related latent-heat transport in the
+        unsaturated configuration);
+  \item the \textbf{liquid mass balance} under the Richards assumption (gas
+        at constant atmospheric pressure), with storage from fluid and pore
+        compressibility, saturation changes
+        $\phi\,\partial S_{\mathrm L}/\partial t$, thermal expansion of the
+        pore water, Darcy flow
+        $ \vect q = -\dfrac{k_{\mathrm{rel}}(S_{\mathrm L})\,\ten k}{\mu(T)}
+          \nabla p_{\mathrm{LR}}$,
+        and, in the unsaturated configuration, diffusive water-vapour
+        transport; and
+  \item the \textbf{momentum balance}
+        $\nabla\cdot\left(\ten\sigma' - \alpha_{\mathrm B}\,
+        \chi(S_{\mathrm L})\,p_{\mathrm{LR}}\ten I\right)=\vect 0$ with the
+        Bishop factor $\chi$ and thermo-elastic effective stress
+        $\ten\sigma'=\mathbb{C}:\left(\ten\varepsilon
+        -\alpha_{T}\Delta T\,\ten I\right)$.
+\end{itemize}
+Gravity is disabled. With $S_{\mathrm L}\equiv1$, $k_{\mathrm{rel}}\equiv1$,
+and $\chi=S_{\mathrm L}$ the formulation reduces to single-phase saturated
+THM --- this is the \emph{saturated} configuration (TRM-S
+in~\cite{pitz2023}). The \emph{partially saturated} configuration activates
+van~Genuchten saturation and relative permeability, a Bishop
+saturation-cutoff model, water-vapour density and FEBEX-type vapour
+diffusion with linear latent heat, mass lumping, and a temperature-dependent
+IAPWS viscosity curve.
+
+\subsection{Material parameters}
+
+\begin{center}
+\footnotesize
+\begin{tabular}{@{}llll@{}}
+\toprule
+Property & Symbol & Bentonite buffer & Opalinus Clay \\
+\midrule
+Solid density / $\mathrm{kg\,m^{-3}}$ & $\varrho_{\mathrm s}$ & $2227.2$ & $2689.66$ \\
+Solid specific heat / $\mathrm{J\,kg^{-1}\,K^{-1}}$ & $c_{p,\mathrm s}$ & $800$ & $995$ \\
+Solid thermal conductivity / $\mathrm{W\,m^{-1}\,K^{-1}}$ & $\lambda_{\mathrm s}$ & $1.2$ &
+  $\lambda_\perp=1.3$, $\lambda_\parallel=2.4$ \\
+Solid thermal expansivity / $\mathrm{K^{-1}}$ & $\alpha_{T}$ & $3.0\times10^{-6}$ & $1.5\times10^{-5}$ \\
+Intrinsic permeability / $\mathrm{m^2}$ & $k$ & $3.5\times10^{-20}$ &
+  $k_\perp=10^{-20}$, $k_\parallel=5\times10^{-20}$ \\
+Porosity & $\phi$ & $0.331$ & $0.13$ \\
+Elasticity & & isotropic, $E=18\MPa$, $\nu=0.35$ &
+  orthotropic, see text \\
+Biot coefficient & $\alpha_{\mathrm B}$ & $1.0$ & $1.0$ \\
+van Genuchten $p_{\mathrm b}$, $m$ & & $28.6\MPa$, $0.5$ & $20\MPa$, $0.6$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The clay is modelled as a linearly elastic orthotropic material with
+$E_\perp=4\GPa$ and $E_\parallel=8\GPa$, Poisson's ratios
+$(0.25,\,0.35,\,0.35)$, and shear moduli
+$G=3.5\GPa$ and $8/(2\cdot1.35)\approx2.96\GPa$; its anisotropy
+axes are set through an OGS local coordinate system
+(\path{<local_coordinate_system>}), with bedding-parallel and
+bedding-perpendicular directions as listed above. Two saturated bedding
+orientations ($0^\circ$ and $90^\circ$) are generated from the same
+parameter set by rotating the local basis and the permeability tensor.
+
+The pore water uses $c_p=4184\,\mathrm{J/(kg\,K)}$,
+$\lambda=0.63\,\mathrm{W/(m\,K)}$, viscosity
+$\mu=10^{-3}\,\mathrm{Pa\,s}$, and a linear equation of state
+$\varrho_{\mathrm{LR}}(p,T)$ with reference density
+$1000\,\mathrm{kg/m^3}$, thermal expansivity $4\times10^{-4}\,\mathrm{1/K}$,
+and compressibility $5\times10^{-10}\,\mathrm{1/Pa}$. The partially
+saturated configuration replaces the constant viscosity by a 37-point IAPWS
+$\mu(T)$ curve ($273.15$--$453.15\,\mathrm K$) and uses a buffer thermal
+conductivity that increases linearly with saturation from
+$0.35$ (dry) to $1.2\,\mathrm{W/(m\,K)}$ (saturated).
+
+\subsection{Initial and boundary conditions}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{@{}lXX@{}}
+\toprule
+Field & Saturated configuration & Partially saturated configuration \\
+\midrule
+$T_0$ & $288.15\,\mathrm K$ ($15\degC$) & $288.15\,\mathrm K$ \\
+$p_0$ & $0\,\mathrm{Pa}$ (results shifted by $+2\MPa$ in the plots) &
+  buffer $-123\MPa$ ($S_{\mathrm L}\approx0.23$, dry emplacement);
+  clay $+2\MPa$ \\
+$\vect u_0$, $\ten\sigma_0$ & zero & zero \\
+\midrule
+Displacement & \multicolumn{2}{p{0.72\textwidth}}{rollers on all four outer
+  boundaries ($u_x=0$ left/right, $u_y=0$ top/bottom); heater surface
+  (\texttt{arc\_inner}) fixed} \\
+Temperature & \multicolumn{2}{p{0.72\textwidth}}{Neumann heat flux
+  $q=89\,\mathrm{W/m^2}$ on \texttt{arc\_inner}, constant over the full five
+  years} \\
+Hydraulic & \multicolumn{2}{p{0.72\textwidth}}{all boundaries natural (no
+  flow)} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Because the saturated response is linear in the pressure level, running it
+with $p_0=0$ and shifting the plotted pressures by $+2\MPa$ reproduces the
+paper's absolute values exactly.
+
+\subsection{Numerical settings}
+
+Backward Euler in time with iteration-number-based adaptive time stepping
+(initial $\Delta t=0.1\,\mathrm s$, maximum
+$\Delta t=1.576\times10^6\,\mathrm s$) up to
+$t_{\mathrm{end}}=1.5768\times10^8\,\mathrm s$ (5 years). Newton's method
+(maximum 20 iterations) with a per-component relative $\Delta x$ criterion of
+$10^{-6}$ for $T$, $p$, $u_x$, $u_y$. The linear solver is Eigen's
+\texttt{SparseLU} direct solver with equilibration
+(\texttt{<scaling>true</scaling>}); iterative presets
+(BiCGSTAB/GMRES with ILUT) are available in the notebook as named
+alternatives. Because $T$ and $p$ are first-order fields on a second-order
+mesh, the project outputs \texttt{temperature\_interpolated} and
+\texttt{pressure\_interpolated}, which carry values on \emph{all} nodes of
+the quadratic mesh; all probes and contour plots use these fields.
+
+\section{Results}
+
+All three runs (saturated $0^\circ$, saturated $90^\circ$, partially
+saturated) complete with OGS 6.5.9 without any rejected time steps
+(139/139/142 adaptive steps; about $80$--$150\,\mathrm s$ wall time each).
+Representative values at the end of the five-year heating phase, probed on
+the horizontal symmetry axis (saturated pressures include the $+2\MPa$
+shift):
+
+\begin{center}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+ & Heater surface & Tunnel wall & Clay \\
+ & $r=0.525\,\mathrm m$ & $r=1.24\,\mathrm m$ & $r=3\,\mathrm m$ \\
+\midrule
+\multicolumn{4}{@{}l@{}}{\emph{Saturated ($90^\circ$ bedding case)}} \\
+Temperature & $123.9\degC$ & $84.4\degC$ & $63.4\degC$ \\
+Liquid pressure & $18.5\MPa$ & $18.4\MPa$ & $17.4\MPa$ \\[2pt]
+\multicolumn{4}{@{}l@{}}{\emph{Partially saturated}} \\
+Temperature & $161.7\degC$ & $79.8\degC$ & $54.4\degC$ \\
+Liquid pressure & $-478\MPa$ & $-32.4\MPa$ & $+2.5\MPa$ \\
+Saturation & $0.06$ & $0.52$ & $1.00$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Saturated configuration.}
+Heating pressurises the pore water of the low-permeability clay to a peak of
+about $16.5\MPa$ above the initial state (thermal pressurisation), which
+then drains anisotropically along the bedding. The two bedding orientations
+$0^\circ$ and $90^\circ$ produce stress, pressure, and displacement fields
+that are exact $90^\circ$ rotations of each other (maximum displacement
+$6.08\,\mathrm{mm}$ in both runs), a built-in consistency check of the local
+coordinate system and tensor rotation handling.
+
+\paragraph{Partially saturated configuration.}
+The dry-emplaced buffer first desiccates further near the heater
+(saturation drops from $0.23$ to about $0.06$, suction grows to several
+hundred MPa) because the strong thermal gradient drives vapour outward,
+while the buffer simultaneously resaturates from the host rock at the tunnel
+wall. The clay pressurises to a peak of about $11\MPa$. The heater
+temperature is markedly higher than in the saturated case
+($\approx162\degC$ vs.\ $\approx124\degC$) because the dry buffer conducts
+heat poorly; as the buffer resaturates its conductivity rises and the heater
+temperature declines late in the simulation. This is the characteristic
+behaviour reported in~\cite{pitz2023}; digitized reference curves from the
+paper are archived in \texttt{TRM/paper\_data/} for further comparison
+exercises.
+
+\paragraph{Mesh sensitivity.}
+A fine-mesh reference solution (5700 cells, archived in the folder
+\path{TRM/_out_fine_reference/}) confirms the saturated
+fields on the course mesh to within a fraction of a degree and
+$0.1\MPa$. The steep dry-out front of the partially saturated case is more
+mesh-sensitive: the fine mesh gives $151\degC$ and $-380\MPa$ at the heater
+against $162\degC$ and $-478\MPa$ on the coarse course mesh. Participants
+should treat near-heater suction values as mesh-dependent and refine locally
+when they matter.
+
+%=====================================================================
+\chapter{Concluding remarks}
+
+The three exercises cover the span from single-physics verification to
+multi-field, multi-material applications:
+\begin{itemize}[nosep]
+  \item Problem~1 establishes the methodology: a formal derivation of the
+        excavation boundary condition, exact agreement between two
+        formulations, and a quantitative comparison with a classical
+        analytical solution --- including the discipline of separating model
+        error, discretization error, and postprocessing artifacts.
+  \item Problem~2 contrasts two fracture representations inside one
+        verification framework and shows that an equivalent-continuum model,
+        when its transmissivity and compliance are upscaled consistently,
+        matches a discrete interface-element model to within a fraction of a
+        percent.
+  \item Problem~3 scales this methodology to a coupled THM problem with two
+        materials, anisotropy, and unsaturated constitutive behaviour,
+        reproducing the published heater benchmark behaviour and including a
+        mesh-sensitivity assessment.
+\end{itemize}
+All folders are self-contained and re-runnable from scratch with the single
+Python environment of Section~\ref{sec:installation}; the executed course
+versions were verified with OpenGeoSys~6.5.9.
+
+\KOMAoptions{bibliography=totoc}
+\begin{thebibliography}{9}
+  \bibitem{kirsch1898}
+        E. G. Kirsch, ``Die Theorie der Elastizit\"at und die Bed\"urfnisse
+        der Festigkeitslehre,'' \emph{Zeitschrift des Vereines Deutscher
+        Ingenieure}, vol.~42, pp.~797--807, 1898.
+  \bibitem{pitz2023}
+        M. Pitz et al., ``Non-isothermal consolidation: A systematic
+        evaluation of two implementations based on multiphase and Richards
+        equations,'' \emph{International Journal of Rock Mechanics and
+        Mining Sciences}, vol.~170, 105534, 2023.
+        \url{https://doi.org/10.1016/j.ijrmms.2023.105534}
+  \bibitem{bilke2019}
+        L. Bilke, B. Flemisch, T. Kalbacher, O. Kolditz, R. Helmig, and
+        T. Nagel, ``Development of open-source porous media simulators:
+        Principles and experiences,'' \emph{Transport in Porous Media},
+        vol.~130, pp.~337--361, 2019.
+  \bibitem{kolditz2012}
+        O. Kolditz, U.-J. G\"orke, H. Shao, and W. Wang (eds.),
+        \emph{Thermo-Hydro-Mechanical-Chemical Processes in Porous Media:
+        Benchmarks and Examples}, Springer, Berlin, Heidelberg, 2012.
+  \bibitem{witherspoon1980}
+        P. A. Witherspoon, J. S. Y. Wang, K. Iwai, and J. E. Gale,
+        ``Validity of cubic law for fluid flow in a deformable rock
+        fracture,'' \emph{Water Resources Research}, vol.~16, no.~6,
+        pp.~1016--1024, 1980.
+  \bibitem{gerrard1982}
+        C. M. Gerrard, ``Elastic models of rock masses having one, two and
+        three sets of joints,'' \emph{International Journal of Rock
+        Mechanics and Mining Sciences \& Geomechanics Abstracts}, vol.~19,
+        pp.~15--23, 1982.
+  \bibitem{carslaw1959}
+        H. S. Carslaw and J. C. Jaeger, \emph{Conduction of Heat in Solids},
+        2nd ed., Oxford University Press, 1959.
+  \bibitem{ogs-docs}
+        OpenGeoSys documentation, \url{https://www.opengeosys.org/docs/}.
+\end{thebibliography}
+
+\paragraph{Acknowledgement.}
+The Kirsch excavation example builds on the OpenGeoSys
+\texttt{ReleaseNodalForce} benchmark by Wenqing Wang; the TRM exercise
+follows the DECOVALEX-2023 Task~C benchmark of Pitz et al.
+
+\end{document}
