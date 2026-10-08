@@ -2,7 +2,7 @@ interactive: false
 args: null
 wrapper: null
 mpi_wrapper: mpirun -np
-ogs_path: /home/mehran/.venvs/ogs312/bin
+ogs_path: /home/mehran/.venv313/bin
 mpi_ranks: null
 omp_num_threads: 4
 ogs_asm_threads: 4

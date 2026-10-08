@@ -1,5 +1,5 @@
-info: This is OpenGeoSys-6 version 6.5.9. Log version: 2, Log level: info.
-info: OGS starts on 2026-10-01 12:46:43+0200 in serial mode / Python embedded mode.
+info: This is OpenGeoSys-6 version 6.5.8. Log version: 2, Log level: info.
+info: OGS starts on 2026-10-08 13:13:08+0200 in serial mode / Python embedded mode.
 info: OMP_NUM_THREADS is set to: 4
 info: Eigen use 4 threads
 info: Reading project file _prj/kirsch_standard.prj.
@@ -11,7 +11,6 @@ info: ConstantParameter: zero
 info: ConstantParameter: initial_displacement
 info: FunctionParameter: sigma0
 info: ConstantParameter: sigma_top
-info: FunctionParameter: decay_function
 info: Configure mesh 'left' for boundary condition or source term.
 info: Configure mesh 'bottom' for boundary condition or source term.
 info: Configure mesh 'top' for boundary condition or source term.
@@ -21,10 +20,50 @@ info: SmallDeformation process initializeSubmeshOutput().
 info: Initialize processes.
 info: Checking correct model evaluation order in the constitutive setting.
 info: Model evaluation order is correct.
-critical: /project/ProcessLib/BoundaryConditionAndSourceTerm/DirichletBoundaryConditionAuxiliaryFunctions.cpp:37 checkParametersOfDirichletBoundaryCondition() The required bulk node ids map does not exist in the boundary mesh 'left'.
-error: The required bulk node ids map does not exist in the boundary mesh 'left'.
-critical: /project/BaseLib/ConfigTree.cpp:290 onerror() ConfigTree: In file `/home/mehran/Desktop/OGS_Training-Course_KCH/Tunnel_Excavation_Kirsch/_prj/kirsch_standard.prj' at path <process_variables/process_variable/boundary_conditions/boundary_condition>: Key <parameter> has been read 1 time(s) less than it was present in the configuration tree.
-error: ConfigTree: In file `/home/mehran/Desktop/OGS_Training-Course_KCH/Tunnel_Excavation_Kirsch/_prj/kirsch_standard.prj' at path <process_variables/process_variable/boundary_conditions/boundary_condition>: Key <parameter> has been read 1 time(s) less than it was present in the configuration tree.
-critical: /project/BaseLib/ConfigTree.cpp:290 onerror() ConfigTree: In file `/home/mehran/Desktop/OGS_Training-Course_KCH/Tunnel_Excavation_Kirsch/_prj/kirsch_standard.prj' at path <process_variables/process_variable/boundary_conditions/boundary_condition>: Key <parameter> has been read 1 time(s) less than it was present in the configuration tree.
-error: ConfigTree: In file `/home/mehran/Desktop/OGS_Training-Course_KCH/Tunnel_Excavation_Kirsch/_prj/kirsch_standard.prj' at path <process_variables/process_variable/boundary_conditions/boundary_condition>: Key <parameter> has been read 1 time(s) less than it was present in the configuration tree.
-Could not construct OGSSimulation object
+info: Time step #0 started. Time: 0. Step size: 0.
+info: [time] Output of timestep 0 took 0.0301445 s.
+info: Time step #0 took 0.0407797 s.
+info: OpenGeoSys is now initialized.
+info: OGS started on 2026-10-08 13:13:08+0200 in serial mode.
+info: Solve processes.
+info: Time step #1 started. Time: 1. Step size: 1.
+info: Solving process #0 started.
+info: Iteration #1 started.
+info: Number of threads: 4
+info: [time] Assembly took 0.075947 s.
+info: [time] Applying Dirichlet BCs took 0.0207184 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver compute()
+info: -> compute with Eigen direct linear solver SparseLU
+info: ------------------------------------------------------------------
+info: *** Eigen solver solve()
+info: -> solve with Eigen direct linear solver SparseLU
+info: [time] Linear solver took 0.636204 s.
+info: Convergence criterion, component 0: |dx|=4.7912e+00, |x|=4.7912e+00, |dx|/|x|=1.0000e+00
+info: Convergence criterion, component 1: |dx|=1.1347e+01, |x|=1.1347e+01, |dx|/|x|=1.0000e+00
+info: [time] Iteration #1 took 0.736743 s.
+info: Iteration #2 started.
+info: Number of threads: 4
+info: [time] Assembly took 0.0389579 s.
+info: [time] Applying Dirichlet BCs took 0.00837886 s.
+info: ------------------------------------------------------------------
+info: *** Eigen solver compute()
+info: -> compute with Eigen direct linear solver SparseLU
+info: ------------------------------------------------------------------
+info: *** Eigen solver solve()
+info: -> solve with Eigen direct linear solver SparseLU
+info: [time] Linear solver took 0.484165 s.
+info: Convergence criterion, component 0: |dx|=4.6131e-13, |x|=4.7912e+00, |dx|/|x|=9.6283e-14
+info: Convergence criterion, component 1: |dx|=1.1501e-12, |x|=1.1347e+01, |dx|/|x|=1.0136e-13
+info: [time] Iteration #2 took 0.535445 s.
+info: [time] Solving process #0 took 1.2723 s in time step #1
+info: [time] Time step #1 took 1.30041 s.
+info: [time] Output of timestep 1 took 0.0369874 s.
+info: The whole computation of the time stepping took 1 steps, in which
+	 the accepted steps are 1, and the rejected steps are 0.
+
+info: [time] Simulation completed. It took 1.33755 s.
+info: OGS completed on 2026-10-08 13:13:09+0200.
+info: The whole computation of the time stepping took 1 steps, in which
+	 the accepted steps are 1, and the rejected steps are 0.
+

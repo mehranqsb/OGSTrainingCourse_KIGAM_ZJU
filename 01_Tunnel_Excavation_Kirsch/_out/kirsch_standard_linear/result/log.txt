@@ -1,5 +1,5 @@
-info: This is OpenGeoSys-6 version 6.5.9. Log version: 2, Log level: info.
-info: OGS starts on 2026-10-01 12:46:44+0200 in serial mode / Python embedded mode.
+info: This is OpenGeoSys-6 version 6.5.8. Log version: 2, Log level: info.
+info: OGS starts on 2026-10-08 13:13:10+0200 in serial mode / Python embedded mode.
 info: OMP_NUM_THREADS is set to: 4
 info: Eigen use 4 threads
 info: Reading project file _prj/kirsch_standard_linear.prj.
@@ -11,7 +11,6 @@ info: ConstantParameter: zero
 info: ConstantParameter: initial_displacement
 info: FunctionParameter: sigma0
 info: ConstantParameter: sigma_top
-info: FunctionParameter: decay_function
 info: Configure mesh 'left' for boundary condition or source term.
 info: Configure mesh 'bottom' for boundary condition or source term.
 info: Configure mesh 'top' for boundary condition or source term.
@@ -22,49 +21,49 @@ info: Initialize processes.
 info: Checking correct model evaluation order in the constitutive setting.
 info: Model evaluation order is correct.
 info: Time step #0 started. Time: 0. Step size: 0.
-info: [time] Output of timestep 0 took 0.00711864 s.
-info: Time step #0 took 0.00975093 s.
+info: [time] Output of timestep 0 took 0.0170059 s.
+info: Time step #0 took 0.0246364 s.
 info: OpenGeoSys is now initialized.
-info: OGS started on 2026-10-01 12:46:44+0200 in serial mode.
+info: OGS started on 2026-10-08 13:13:10+0200 in serial mode.
 info: Solve processes.
 info: Time step #1 started. Time: 1. Step size: 1.
 info: Solving process #0 started.
 info: Iteration #1 started.
 info: Number of threads: 4
-info: [time] Assembly took 0.00883085 s.
-info: [time] Applying Dirichlet BCs took 0.00101508 s.
+info: [time] Assembly took 0.0200613 s.
+info: [time] Applying Dirichlet BCs took 0.00205826 s.
 info: ------------------------------------------------------------------
 info: *** Eigen solver compute()
 info: -> compute with Eigen direct linear solver SparseLU
 info: ------------------------------------------------------------------
 info: *** Eigen solver solve()
 info: -> solve with Eigen direct linear solver SparseLU
-info: [time] Linear solver took 0.0401357 s.
+info: [time] Linear solver took 0.0840539 s.
 info: Convergence criterion, component 0: |dx|=2.7929e+00, |x|=2.7929e+00, |dx|/|x|=1.0000e+00
 info: Convergence criterion, component 1: |dx|=6.6140e+00, |x|=6.6140e+00, |dx|/|x|=1.0000e+00
-info: [time] Iteration #1 took 0.0505574 s.
+info: [time] Iteration #1 took 0.107428 s.
 info: Iteration #2 started.
 info: Number of threads: 4
-info: [time] Assembly took 0.00799768 s.
-info: [time] Applying Dirichlet BCs took 0.000489968 s.
+info: [time] Assembly took 0.0227495 s.
+info: [time] Applying Dirichlet BCs took 0.00106793 s.
 info: ------------------------------------------------------------------
 info: *** Eigen solver compute()
 info: -> compute with Eigen direct linear solver SparseLU
 info: ------------------------------------------------------------------
 info: *** Eigen solver solve()
 info: -> solve with Eigen direct linear solver SparseLU
-info: [time] Linear solver took 0.0326258 s.
-info: Convergence criterion, component 0: |dx|=5.0082e-14, |x|=2.7929e+00, |dx|/|x|=1.7932e-14
-info: Convergence criterion, component 1: |dx|=9.1020e-14, |x|=6.6140e+00, |dx|/|x|=1.3762e-14
-info: [time] Iteration #2 took 0.0416689 s.
-info: [time] Solving process #0 took 0.0922549 s in time step #1
-info: [time] Time step #1 took 0.102071 s.
-info: [time] Output of timestep 1 took 0.00770366 s.
+info: [time] Linear solver took 0.0678191 s.
+info: Convergence criterion, component 0: |dx|=3.3682e-14, |x|=2.7929e+00, |dx|/|x|=1.2060e-14
+info: Convergence criterion, component 1: |dx|=6.4439e-14, |x|=6.6140e+00, |dx|/|x|=9.7429e-15
+info: [time] Iteration #2 took 0.0929036 s.
+info: [time] Solving process #0 took 0.20041 s in time step #1
+info: [time] Time step #1 took 0.221993 s.
+info: [time] Output of timestep 1 took 0.0198351 s.
 info: The whole computation of the time stepping took 1 steps, in which
 	 the accepted steps are 1, and the rejected steps are 0.
 
-info: [time] Simulation completed. It took 0.109798 s.
+info: [time] Simulation completed. It took 0.241988 s.
+info: OGS completed on 2026-10-08 13:13:10+0200.
 info: The whole computation of the time stepping took 1 steps, in which
 	 the accepted steps are 1, and the rejected steps are 0.
 
-info: OGS completed on 2026-10-01 12:46:44+0200.
