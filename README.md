@@ -10,15 +10,19 @@ Start with the [Installation and Course Environment Manual](Docs/ogs_installatio
 
 ## Run the course examples in your browser
 
-[Open all examples on Binder](https://mybinder.org/v2/gh/mehranqsb/OGSTrainingCourse_KIGAM_ZJU/main).
+[Open all examples on Binder](https://mybinder.org/v2/gh/mehranqsb/OGSTrainingCourse_KIGAM_ZJU/binder).
+Binder links launch the lightweight `binder` branch, which contains the three
+examples and online dependencies. The `main` branch retains the offline installers
+and wheelhouses. Changes on `main` do not automatically update `binder`.
+
 No local OGS installation is required. In JupyterLab's left file browser, open
 folder 01, 02, or 03 and double-click its notebook, then select **Run → Run All Cells**.
 
 | Example | Browser launch |
 | --- | --- |
-| 01 — Tunnel excavation / Kirsch | [Launch 01](https://mybinder.org/v2/gh/mehranqsb/OGSTrainingCourse_KIGAM_ZJU/main?labpath=01_Tunnel_Excavation_Kirsch%2F01_tunnel_excavation_kirsch.ipynb) |
-| 02 — Fault-controlled injection / LIE–EFPM | [Launch 02](https://mybinder.org/v2/gh/mehranqsb/OGSTrainingCourse_KIGAM_ZJU/main?labpath=02_LIE_EFPM_Fault-Controlled_Injection%2F02_lie_efpm_injection.ipynb) |
-| 03 — Heated tunnel / TRM | [Launch 03](https://mybinder.org/v2/gh/mehranqsb/OGSTrainingCourse_KIGAM_ZJU/main?labpath=03_TRM_Heated_Tunnel_FE_Experiment%2F03_trm_heated_tunnel.ipynb) |
+| 01 — Tunnel excavation / Kirsch | [Launch 01](https://mybinder.org/v2/gh/mehranqsb/OGSTrainingCourse_KIGAM_ZJU/binder?labpath=01_Tunnel_Excavation_Kirsch%2F01_tunnel_excavation_kirsch.ipynb) |
+| 02 — Fault-controlled injection / LIE–EFPM | [Launch 02](https://mybinder.org/v2/gh/mehranqsb/OGSTrainingCourse_KIGAM_ZJU/binder?labpath=02_LIE_EFPM_Fault-Controlled_Injection%2F02_lie_efpm_injection.ipynb) |
+| 03 — Heated tunnel / TRM | [Launch 03](https://mybinder.org/v2/gh/mehranqsb/OGSTrainingCourse_KIGAM_ZJU/binder?labpath=03_TRM_Heated_Tunnel_FE_Experiment%2F03_trm_heated_tunnel.ipynb) |
 
 The `.binder/` directory configures Python 3.11, OGSTools 0.8, the OGS executable,
 Gmsh, and the native libraries needed by Gmsh. The build checks imports and the
