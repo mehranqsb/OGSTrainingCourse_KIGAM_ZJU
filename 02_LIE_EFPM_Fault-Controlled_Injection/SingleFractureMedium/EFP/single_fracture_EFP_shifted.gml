@@ -8,7 +8,7 @@
         <point id="3" x="12.6" y="0" z="0"/>
         <point id="4" x="0.1" y="0.5" z="0" name="POINT_IN"/>
         <point id="5" x="0.1" y="0.501" z="0"/>
-        <point id="6" x="12.6" y="0.5	" z="0"name="POINT_OUT"/>
+        <point id="6" x="12.6" y="0.5" z="0" name="POINT_OUT"/>
         <point id="7" x="12.6" y="0.501" z="0"/>
     </points>
     <polylines>
