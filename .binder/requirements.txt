@@ -1,0 +1,7 @@
+ogstools[ogs]>=0.8,<0.9
+jupyterlab>=4,<5
+gmsh
+matplotlib
+numpy
+scipy
+pyvista

@@ -6,7 +6,35 @@ Installation materials for the joint October 2026 OpenGeoSys training course inv
 
 The course introduces finite element modelling in geomechanics, the OpenGeoSys workflow, model setup and constitutive models, coupled hydro-mechanical and thermo-hydro-mechanical simulations, and post-processing. It is intended for researchers, engineers, graduate students, and professionals in geotechnical engineering and computational geosciences.
 
-Start with the [Installation and Course Environment Manual](Docs/ogs_installation.pdf). This repository currently contains environment setup materials and documentation; exercise notebooks, meshes, and simulation projects are not included.
+Start with the [Installation and Course Environment Manual](Docs/ogs_installation.pdf). The repository also contains three course exercise notebooks with mesh and project generators.
+
+## Run the course examples in your browser
+
+[Open all examples on Binder](https://mybinder.org/v2/gh/mehranqsb/OGSTrainingCourse_KIGAM_ZJU/main).
+No local OGS installation is required. In JupyterLab's left file browser, open
+folder 01, 02, or 03 and double-click its notebook, then select **Run → Run All Cells**.
+
+| Example | Browser launch |
+| --- | --- |
+| 01 — Tunnel excavation / Kirsch | [Launch 01](https://mybinder.org/v2/gh/mehranqsb/OGSTrainingCourse_KIGAM_ZJU/main?labpath=01_Tunnel_Excavation_Kirsch%2F01_tunnel_excavation_kirsch.ipynb) |
+| 02 — Fault-controlled injection / LIE–EFPM | [Launch 02](https://mybinder.org/v2/gh/mehranqsb/OGSTrainingCourse_KIGAM_ZJU/main?labpath=02_LIE_EFPM_Fault-Controlled_Injection%2F02_lie_efpm_injection.ipynb) |
+| 03 — Heated tunnel / TRM | [Launch 03](https://mybinder.org/v2/gh/mehranqsb/OGSTrainingCourse_KIGAM_ZJU/main?labpath=03_TRM_Heated_Tunnel_FE_Experiment%2F03_trm_heated_tunnel.ipynb) |
+
+The `.binder/` directory configures Python 3.11, OGSTools 0.8, the OGS executable,
+Gmsh, and the native libraries needed by Gmsh. The build checks imports and the
+OGS version before launching. Binder installs packages online; the platform-specific
+Python 3.13 offline wheelhouses are for local course installations.
+
+After a new commit, Binder may rebuild its image and reinstall dependencies.
+The first build can take several minutes; later launches of the same commit
+usually reuse the image. Session startup, service demand, cache availability,
+and this repository's large offline bundles can add time. Expand **Show build logs**
+to follow progress. Bookmark the permanent launch link, rather than the temporary
+Jupyter session address. A direct notebook link needs a complete `?labpath=...` value.
+
+Binder sessions are temporary. Download results and edited notebooks before leaving.
+Example 03 runs multiple coupled simulations and may need considerable time and
+memory. Full Binder simulation runs have not yet been verified for this repository.
 
 ## Repository contents
 

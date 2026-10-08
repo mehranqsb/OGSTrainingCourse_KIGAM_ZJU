@@ -1,0 +1,6 @@
+#!/bin/bash
+set -eu
+
+# Catch missing native libraries before opening the notebook.
+python -c "import gmsh; import ogstools; import pyvista; print('Notebook imports OK')"
+ogs --version
