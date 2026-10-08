@@ -1,18 +1,9 @@
-/.venv_ogs/
-/Docs/*.aux
-/Docs/*.fdb_latexmk
-/Docs/*.fls
-/Docs/*.loc
-/Docs/*.log
-/Docs/*.out
-/Docs/*.soc
-/Docs/*.toc
-*.vtu
 __pycache__/
 *.pyc
-*.aux
-*.fdb_latexmk
-*.fls
-*.log
-*.out
-*.toc
+.ipynb_checkpoints/
+# Generated simulation folders (including VTU, PVD, and logs).
+_out*/
+
+# OGS timestep results, even when written outside an output folder.
+*_ts_*.vtu
+*.pvd

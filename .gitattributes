@@ -1,4 +1,0 @@
-wheelhouse_ubuntu/*.whl filter=lfs diff=lfs merge=lfs -text
-wheelhouse_windows/*.whl filter=lfs diff=lfs merge=lfs -text
-python-*-amd64.exe filter=lfs diff=lfs merge=lfs -text
-vscode_offline/** filter=lfs diff=lfs merge=lfs -text
