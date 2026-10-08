@@ -123,11 +123,6 @@
             <type>Constant</type>
             <value>-20000000.0</value>
         </parameter>
-        <parameter>
-            <name>decay_function</name>
-            <type>Function</type>
-            <expression>if (t&gt;172800.0) 0.0; else 1 - t/172800.0</expression>
-        </parameter>
     </parameters>
     <process_variables>
         <process_variable>
