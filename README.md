@@ -6,11 +6,14 @@ Installation materials for the joint October 2026 OpenGeoSys training course inv
 
 The course introduces finite element modelling in geomechanics, the OpenGeoSys workflow, model setup and constitutive models, coupled hydro-mechanical and thermo-hydro-mechanical simulations, and post-processing. It is intended for researchers, engineers, graduate students, and professionals in geotechnical engineering and computational geosciences.
 
-Start with the [Installation and Course Environment Manual](Docs/ogs_installation.pdf). The repository also contains three course exercise notebooks with mesh and project generators.
+Start with the [Installation and Course Environment Manual](Docs/ogs_installation.pdf). The repository also contains three course exercise notebooks with mesh and project generators, plus a fourth notebook that trains PyTorch constitutive models on OGS results.
 
 ## Run the course examples in your browser
 
 [Open all examples on Binder](https://mybinder.org/v2/gh/mehranqsb/OGSTrainingCourse_KIGAM_ZJU/binder).
+
+Additional launch link: [Open the course on OpenGeoSys Binder](https://binder.opengeosys.org/v2/gh/mehranqsb/OGSTrainingCourse_KIGAM_ZJU/binder).
+
 Binder links launch the lightweight `binder` branch, which contains the three
 examples and online dependencies. The `main` branch retains the offline installers
 and wheelhouses. Changes on `main` do not automatically update `binder`.
@@ -23,6 +26,7 @@ folder 01, 02, or 03 and double-click its notebook, then select **Run → Run Al
 | 01 — Tunnel excavation / Kirsch | [Launch 01](https://mybinder.org/v2/gh/mehranqsb/OGSTrainingCourse_KIGAM_ZJU/binder?labpath=01_Tunnel_Excavation_Kirsch%2F01_tunnel_excavation_kirsch.ipynb) |
 | 02 — Fault-controlled injection / LIE–EFPM | [Launch 02](https://mybinder.org/v2/gh/mehranqsb/OGSTrainingCourse_KIGAM_ZJU/binder?labpath=02_LIE_EFPM_Fault-Controlled_Injection%2F02_lie_efpm_injection.ipynb) |
 | 03 — Heated tunnel / TRM | [Launch 03](https://mybinder.org/v2/gh/mehranqsb/OGSTrainingCourse_KIGAM_ZJU/binder?labpath=03_TRM_Heated_Tunnel_FE_Experiment%2F03_trm_heated_tunnel.ipynb) |
+| 04 — AI constitutive model / plate (OGS + PyTorch) | Local only: needs PyTorch, see [04_AI_Constitutive_Plate/README.md](04_AI_Constitutive_Plate/README.md) |
 
 The `.binder/` directory configures Python 3.11, OGSTools 0.8, the OGS executable,
 Gmsh, and the native libraries needed by Gmsh. The build checks imports and the
@@ -40,12 +44,53 @@ Binder sessions are temporary. Download results and edited notebooks before leav
 Example 03 runs multiple coupled simulations and may need considerable time and
 memory. Full Binder simulation runs have not yet been verified for this repository.
 
+### Reuse a shared Binder environment (Lars's recommendation)
+
+Lars recommends keeping the environment (tool installation and dependencies) in
+one repository and the notebooks and data in another. With the direct course
+links above, a new notebook commit can trigger a new image build, which takes
+time. Separating the repositories allows notebook updates to reuse the existing
+environment image.
+
+Use the [shared OGS environment repository](https://github.com/bilke/binder-ogs-requirements),
+which Lars identifies as the environment used by the OGS website:
+
+[Launch the course with the shared OGS environment](https://binder.opengeosys.org/v2/gh/bilke/binder-ogs-requirements/6.5.9-0.8.2?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fmehranqsb%252FOGSTrainingCourse_KIGAM_ZJU%26urlpath%3Dlab%252Ftree%252FOGSTrainingCourse_KIGAM_ZJU%252F..%252Fdata%26branch%3Dbinder%26targetPath%3Ddata).
+
+This link selects environment version `6.5.9-0.8.2` and uses nbgitpuller to fetch
+the course repository's `binder` branch into `data`, then opens it in JupyterLab.
+After updating the notebooks on that branch, open the same link again to pull
+the updated content. Notebook-only changes do not require rebuilding the shared
+environment image, so launches can be faster once that image is available;
+session startup still depends on service demand and cache availability.
+
+To create or adjust a launch link, use the
+[nbgitpuller link generator](https://nbgitpuller.readthedocs.io/en/latest/link.html)
+with these settings:
+
+| Setting | Value |
+| --- | --- |
+| Binder service | `https://binder.opengeosys.org` |
+| Environment repository | `https://github.com/bilke/binder-ogs-requirements` |
+| Environment branch/tag | `6.5.9-0.8.2` |
+| Content repository | `https://github.com/mehranqsb/OGSTrainingCourse_KIGAM_ZJU` |
+| Content branch | `binder` |
+| File to open | `../data` |
+| Target path | `data` |
+| Application | JupyterLab |
+
+![Lars's annotated nbgitpuller link generator example showing the shared OGS environment and course repository settings](Docs/images/nbgitpuller-binder-link-generator.png)
+
+Lars's example: select the **Binder** tab, enter the settings above, and copy the
+generated link.
+
 ## Repository contents
 
 | Path | Purpose |
 | --- | --- |
 | [Docs/ogs_installation.pdf](Docs/ogs_installation.pdf) | Detailed installation manual for Ubuntu, macOS, and Windows, including offline bundle preparation and optional VS Code setup. |
 | [Docs/ogs_installation.tex](Docs/ogs_installation.tex) | LaTeX source of the manual. |
+| [Project_Idea_Report/project_idea_report.pdf](Project_Idea_Report/project_idea_report.pdf) | Project idea report on physics-constrained AI constitutive models for rock, soil, Martian regolith and 3D-printed geomaterials; LaTeX source alongside. |
 | `Docs/tubaf-report.cls`, `Docs/tubaf-*.sty` | TUBAF document class, fonts, colours, logos, and page layout. |
 | `Docs/UFZ_KIGAM_ZJU.pdf` | Logo artwork used by the manual. |
 | `Docs/ogs_installation.*` (other extensions) | Generated LaTeX auxiliary files and build logs. |
@@ -284,6 +329,10 @@ latexmk -pdf ogs_installation.tex
 ```
 
 Keep the local `tubaf-*.sty` files, `tubaf-report.cls`, and `UFZ_KIGAM_ZJU.pdf` beside the source. The document uses KOMA-Script, TikZ, TeX Gyre fonts, and the other packages declared in the source and style files. LaTeX compilation is separate from the Python course environment.
+
+## Authors
+
+Mehran Ghasabeh, Thomas Nagel, Olaf Kolditz
 
 ## Course contact
 
